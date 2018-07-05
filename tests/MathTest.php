@@ -39,7 +39,7 @@ class MathTest extends PHPUnit_Framework_TestCase
 
     public function testRandom() {
         $intRandom = Mossengine\FiveCode\Math::random(0, 100);
-        $this->assertTrue(100 > $intRandom && 0 < $intRandom);
+        $this->assertTrue(100 > $intRandom && 0 <= $intRandom);
         $intRandom = Mossengine\FiveCode\Math::random(50, 50);
         $this->assertTrue(50 === $intRandom);
         unset($intRandom);
