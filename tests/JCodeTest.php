@@ -3,17 +3,17 @@
 /**
  * Class FiveCodeTest
  */
-class FiveCodeTest extends PHPUnit_Framework_TestCase
+class JCodeTest extends PHPUnit_Framework_TestCase
 {
 
     public function testIfConstructable() {
-        $classFiveCode = new Mossengine\FiveCode\FiveCode;
-        $this->assertTrue($classFiveCode instanceof Mossengine\FiveCode\FiveCode);
+        $classFiveCode = new Mossengine\FiveCode\FiveCode1;
+        $this->assertTrue($classFiveCode instanceof Mossengine\FiveCode\FiveCode1);
         unset($classFiveCode);
     }
 
     public function testFiveCodeVariableSet() {
-        $classFiveCode = new Mossengine\FiveCode\FiveCode;
+        $classFiveCode = new Mossengine\FiveCode\FiveCode1;
         $classFiveCode->execute([
             'variables' => [
                 'boolResult' => false
@@ -37,7 +37,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
     }
 
     public function testFiveCodeVariableSetExecuteJson() {
-        $classFiveCode = new Mossengine\FiveCode\FiveCode;
+        $classFiveCode = new Mossengine\FiveCode\FiveCode1;
         $classFiveCode->executeJson(json_encode([
             'variables' => [
                 'boolResult' => false
@@ -61,7 +61,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
     }
 
     public function testFiveCodeSubInstructions() {
-        $classFiveCode = new Mossengine\FiveCode\FiveCode;
+        $classFiveCode = new Mossengine\FiveCode\FiveCode1;
         $classFiveCode->execute([
             'variables' => [
                 'boolResult' => false,
@@ -95,7 +95,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
     }
 
     public function testFiveCodeCondtions() {
-        $classFiveCode = new Mossengine\FiveCode\FiveCode;
+        $classFiveCode = new Mossengine\FiveCode\FiveCode1;
         $classFiveCode->execute([
             'variables' => [
                 'intLeft' => 5,
@@ -200,7 +200,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
     }
 
     public function testFiveCodeIterateEachVariable() {
-        $classFiveCode = new Mossengine\FiveCode\FiveCode([
+        $classFiveCode = new Mossengine\FiveCode\FiveCode1([
             'functions' => [
                 'mossengine.jcode.math.addition' => '\Mossengine\FiveCode\Math::addition',
             ]
@@ -291,7 +291,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
     }
 
     public function testFiveCodeIterateEachValue() {
-        $classFiveCode = new Mossengine\FiveCode\FiveCode([
+        $classFiveCode = new Mossengine\FiveCode\FiveCode1([
             'functions' => [
                 'mossengine.jcode.math.addition' => '\Mossengine\FiveCode\Math::addition',
             ]
@@ -381,7 +381,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
     }
 
     public function testFiveCodeIterateFor() {
-        $classFiveCode = new Mossengine\FiveCode\FiveCode([
+        $classFiveCode = new Mossengine\FiveCode\FiveCode1([
             'functions' => [
                 'mossengine.jcode.math.addition' => '\Mossengine\FiveCode\Math::addition',
             ]

@@ -1,6 +1,8 @@
-<?php
+<?php namespace Mossengine\FiveCode;
 
-namespace Mossengine\FiveCode;
+use Mossengine\FiveCode\Exceptions\EvaluationException;
+use Mossengine\FiveCode\Exceptions\FunctionException;
+use Mossengine\FiveCode\Helpers\___;
 
 /**
  * Class FiveCode
@@ -8,301 +10,578 @@ namespace Mossengine\FiveCode;
  */
 class FiveCode
 {
-    use ArrTrait;
 
     /**
-     * Internal variable used to store the execution variables
-     *
+     * @var array
+     */
+    private $arrayFunctions = [];
+
+    /**
+     * @param $stringName
+     * @param $mixedCallable
+     */
+    public function functionsSet($stringName, $mixedCallable) {
+        ___::arraySet($this->arrayFunctions, $stringName, $mixedCallable);
+    }
+
+    /**
+     * @param $stringName
+     * @param null $mixedDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function functionsGet($stringName, $mixedDefault = null) {
+        return ___::arrayGet($this->arrayFunctions, $stringName, $mixedDefault);
+    }
+
+    /**
+     * @return array
+     */
+    public function functionsAll() : array {
+        return $this->arrayFunctions;
+    }
+
+    /**
+     * @param $stringName
+     */
+    public function functionsForget($stringName) {
+        ___::arrayForget($this->arrayFunctions, $stringName);
+    }
+
+    /**
+     * @var null
+     */
+    private $arrayFunctionsAllowed = [];
+
+    /**
+     * @param $stringName
+     * @return bool
+     */
+    public function functionsAllowed($stringName) : bool {
+        return true === (
+            ___::arrayGet(
+                $this->arrayFunctionsAllowed,
+                $stringName,
+                ___::arrayGet(
+                    $this->arrayFunctionsAllowed,
+                    '*',
+                    false
+                )
+            )
+        );
+    }
+
+    /**
      * @var array
      */
     private $arrayVariables = [];
 
     /**
-     * Internal array used to store the supported functions for execution, this gets populated as part of the constructor
-     *
-     * @var array
+     * @param $stringPath
+     * @param $mixedValue
      */
-    private $arraySupportedFiveCodeFunctions = [];
+    public function variablesSet($stringPath, $mixedValue) {
+        if ($this->variablesAllowed($stringPath, 'set')) {
+            ___::arraySet($this->arrayVariables, $stringPath, $mixedValue);
+        }
+    }
+
+    /**
+     * @param $stringPath
+     * @param $mixedDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function variablesGet($stringPath, $mixedDefault = null) {
+        if ($this->variablesAllowed($stringPath, 'get')) {
+            return ___::arrayGet($this->arrayVariables, $stringPath, $mixedDefault);
+        }
+        return null;
+    }
+
+    /**
+     * @return array
+     */
+    public function variablesAll() : array {
+        if (
+            empty($this->arrayVariablesAllowed)
+            || (
+                ['*'] === array_keys($this->arrayVariablesAllowed)
+                && $this->variablesAllowed('*', 'get')
+            )
+        ) {
+            return $this->arrayVariables;
+        }
+        return [];
+    }
+
+    /**
+     * @param $stringPath
+     */
+    public function variablesForget($stringPath) {
+        if ($this->variablesAllowed($stringPath, 'forget')) {
+            ___::arrayForget($this->arrayVariables, $stringPath);
+        }
+    }
+
+    /**
+     * @var null
+     */
+    private $arrayVariablesAllowed = [];
+
+    /**
+     * @param string $stringVariableNameOrPath
+     * @param string $stringAction
+     * @return bool
+     */
+    public function variablesAllowed(string $stringVariableNameOrPath, string $stringAction = '*') : bool {
+        return (
+            true === (
+                ___::arrayGet(
+                    $this->arrayVariablesAllowed,
+                    $stringVariableNameOrPath . '.' . $stringAction,
+                    ___::arrayGet(
+                        $this->arrayVariablesAllowed,
+                        $stringVariableNameOrPath,
+                        ___::arrayGet(
+                            $this->arrayVariablesAllowed,
+                            '*.' . $stringAction,
+                            ___::arrayGet(
+                                $this->arrayVariablesAllowed,
+                                '*',
+                                true
+                            )
+                        )
+                    )
+                )
+            )
+        );
+    }
 
     /**
      * FiveCode constructor.
      * @param array $arrayParameters
      */
-    public function __construct($arrayParameters = []) {
-        $this->arraySupportedFiveCodeFunctions = array_merge($this->arraySupportedFiveCodeFunctions, static::array_get($arrayParameters, 'functions', []));
+    public function __construct(array $arrayParameters = []) {
+        $this->arrayFunctions = ___::arrayGet($arrayParameters, 'functions.default', []);
+        $this->arrayFunctionsAllowed = ___::arrayGet($arrayParameters, 'functions.allowed', []);
+
+        $this->arrayVariables = ___::arrayGet($arrayParameters, 'variables.default', []);
+        $this->arrayVariablesAllowed = ___::arrayGet($arrayParameters, 'variables.allowed', []);
     }
 
     /**
-     * Execute the FiveCode from a JSON string
-     *
-     * @param string $stringFiveCode
+     * @param array $arrayParameters
+     * @return static
      */
-    public function executeJson($stringFiveCode = '[]') {
-        // decode the FiveCode string
-        $this->execute(json_decode($stringFiveCode, true));
+    public static function make(array $arrayParameters = []) : self {
+        return new self($arrayParameters);
     }
 
     /**
-     * Executes the FiveCode for a provided array of variables and/or instructions
-     *
-     * @param array $arrayFiveCode
+     * @var int
      */
-    public function execute(array $arrayFiveCode = []) {
-        // Get the variables from the FiveCode
-        $this->arrayVariables = $this->array_get($arrayFiveCode, 'variables', []);
-
-        // Execute the first layer of instructions from the FiveCode
-        $this->instructions($this->array_get($arrayFiveCode, 'instructions', []));
-    }
+    private $intEvaluationsRecursions = 0;
 
     /**
-     * This function gets called when instructions are found at a given level within the FiveCode executed process
-     * FiveCode can have nested instructions so this can loop down many times depending on the FiveCode structure
-     *
-     * @param array $arrayInstructions
+     * @param array $arrayEvaluations
+     * @param bool $boolReturnSelf
+     * @return bool|mixed|FiveCode|null
+     * @throws EvaluationException
+     * @throws FunctionException
      */
-    private function instructions(array $arrayInstructions = []) {
-        // Process each instruction
-        foreach ($arrayInstructions as $arrayInstruction) {
-            switch ($this->array_get($arrayInstruction, 'type', null)) {
-                case 'instructions':
-                    $this->instructions($this->array_get($arrayInstruction, 'instructions', []));
-                    break;
-                case 'variables':
-                    $this->variables($this->array_get($arrayInstruction, 'variables', []));
-                    break;
-                case 'functions':
-                    $this->functions($this->array_get($arrayInstruction, 'functions', []));
-                    break;
-                case 'conditions':
-                    if (
-                        true === $this->array_get($this->conditions($this->array_get($arrayInstruction, 'conditions', [])), $this->array_get($arrayInstruction, 'validation', 'all'))
-                        && $this->array_has($arrayInstruction, 'instructions')
-                    ) {
-                        $this->instructions($this->array_get($arrayInstruction, 'instructions', []));
-                    }
-                    break;
-                case 'iterators':
-                    $this->iterators($this->array_get($arrayInstruction, 'iterators', []));
-                    break;
+    public function evaluate(array $arrayEvaluations = [], bool $boolReturnSelf = true) {
+        $this->intEvaluationsRecursions++;
+        $mixedResult = null;
+
+        if ($this->intEvaluationsRecursions < 10) {
+            foreach ($arrayEvaluations as $arrayEvaluation) {
+                $stringEvaluationType = ___::arrayFirstKey($arrayEvaluation);
+                $mixedEvaluationData = ___::arrayGet($arrayEvaluation, $stringEvaluationType, []);
+                switch ($stringEvaluationType) {
+                    case 'evaluate':
+                        $mixedResult = $this->evaluate([$mixedEvaluationData], false);
+                        break;
+                    case 'evaluates':
+                        $mixedResult = $this->evaluate($mixedEvaluationData, false);
+                        break;
+                    case 'variable':
+                        $mixedResult = $this->variables([$mixedEvaluationData]);
+                        break;
+                    case 'variables':
+                        $mixedResult = $this->variables($mixedEvaluationData);
+                        break;
+                    case 'function':
+                        $this->functions([$mixedEvaluationData]);
+                        break;
+                    case 'functions':
+                        $this->functions($mixedEvaluationData);
+                        break;
+                    case 'condition':
+                        $mixedResult = $this->conditions([$mixedEvaluationData]);
+                        break;
+                    case 'conditions':
+                        $mixedResult = $this->conditions($mixedEvaluationData);
+                        break;
+                    case 'execute':
+                        $mixedResult = $this->executes([$mixedEvaluationData]);
+                        break;
+                    case 'executes':
+                        $mixedResult = $this->executes($mixedEvaluationData);
+                        break;
+                    default:
+                        throw new EvaluationException('Invalid evaluation key : ' . $stringEvaluationType);
+                }
             }
         }
+        $this->intEvaluationsRecursions--;
+        $this->variablesSet('return', $mixedResult);
+        return $boolReturnSelf ? $this : $mixedResult;
     }
 
     /**
-     * This function is used to get, set or forget a variable from within the stored execution variables
-     *
-     * @param null $name
-     * @param string $value
-     * @return mixed
-     */
-    public function variable($name = null, $value = 'SuperCatMonkeyHotDog') {
-        if ('SuperCatMonkeyHotDog' !== $value) {
-            if (!is_null($value)) {
-                $this->array_set($this->arrayVariables, $name, $value);
-            } else {
-                $this->array_forget($this->arrayVariables, $name);
-            }
-        }
-        return $this->array_get($this->arrayVariables, $name, null);
-    }
-
-    /**
-     * This function sets a variable value into the variables array either based on a specific value defined or the reference to another stored variable
-     *
      * @param array $arrayVariables
+     * @return array|\ArrayAccess|mixed|null
+     * @throws EvaluationException
      */
-    private function variables(array $arrayVariables = []) {
+    public function variables(array $arrayVariables = []) {
+        $mixedResult = null;
+
         foreach ($arrayVariables as $arrayVariable) {
-            switch ($this->array_get($arrayVariable, 'type', null)) {
-                case 'variable':
-                    $this->variable($this->array_get($arrayVariable, 'variable', 'default'), $this->variable($this->array_get($arrayVariable, 'variable', 'default')));
+            $stringVariableType = ___::arrayFirstKey($arrayVariable);
+            $mixedVariableData = ___::arrayGet($arrayVariable, $stringVariableType, null);
+            $mixedVariableKey = ___::arrayGet($mixedVariableData, 'key', ___::arrayFirstKey($mixedVariableData));
+            $mixedVariableValueOrDefault = ___::arrayGet($mixedVariableData, 'value', ___::arrayFirstValue($mixedVariableData));
+
+            switch ($stringVariableType) {
+                case 'all':
+                    $mixedResult = $this->variablesAll();
                     break;
-                case 'value':
-                    $this->variable($this->array_get($arrayVariable, 'variable', 'default'), $this->array_get($arrayVariable, 'value', null));
+                case 'get':
+                    $mixedResult = $this->variablesGet($mixedVariableKey, $mixedVariableValueOrDefault);
                     break;
+                case 'set':
+                    $this->variablesSet($mixedVariableKey, $mixedVariableValueOrDefault);
+                    $mixedResult = $this->variablesGet('return', $mixedResult);
+                    break;
+                case 'forget':
+                    $this->variablesForget($mixedVariableKey);
+                    $mixedResult = $this->variablesGet('return', $mixedResult);
+                    break;
+                default:
+                    throw new EvaluationException('Invalid variable type : ' . $stringVariableType);
             }
         }
+
+        $this->variablesSet('return', $mixedResult);
+        return $mixedResult;
     }
 
     /**
-     * This function is where the instructions within the FiveCode calls on one or more functions to be executed, from
-     * here it will execute the instructed function with the suggested variables either based on value or reference into
-     * a function that is part of the supported functions array. The results of the function can then be piped out to a variable or nothing to be done... more options to come.
-     *
      * @param array $arrayFunctions
+     * @throws FunctionException
      */
     private function functions(array $arrayFunctions = []) {
         foreach ($arrayFunctions as $arrayFunction) {
-            if ($this->array_has($arrayFunction, 'parameters')) {
-                $arrayParameters = array_map(
-                    function ($arrayParameter) {
-                        switch ($this->array_get($arrayParameter, 'type', null)) {
-                            case 'variable':
-                                return $this->variable($this->array_get($arrayParameter, 'variable', 'default'));
+            $stringFunctionType = ___::arrayFirstKey($arrayFunction);
+            $mixedFunctionData = ___::arrayGet($arrayFunction, $stringFunctionType, null);
+            $mixedFunctionName = ___::arrayGet($mixedFunctionData, 'key', null);
+            $mixedFunctionCallable = ___::arrayGet($mixedFunctionData, 'callable', $mixedFunctionData);
+
+            if (is_null($mixedFunctionName)) {
+                $mixedFunctionName = $stringFunctionType;
+                $stringFunctionType = 'set';
+            }
+
+            switch ($stringFunctionType) {
+                case 'set':
+                    $this->functionsSet($mixedFunctionName, $mixedFunctionCallable);
+                    break;
+                case 'forget':
+                    $this->functionsForget($mixedFunctionName);
+                    break;
+                default:
+                    throw new FunctionException('Invalid function type : ' . $stringFunctionType);
+            }
+        }
+    }
+
+    /**
+     * @var int
+     */
+    private $intConditionsRecursions = 0;
+
+    /**
+     * @param array $arrayConditions
+     * @return bool|null
+     * @throws EvaluationException
+     * @throws FunctionException
+     */
+    private function conditions(array $arrayConditions = []) {
+        $this->intConditionsRecursions++;
+        $mixedResult = null;
+
+        if ($this->intConditionsRecursions < 10) {
+            foreach ($arrayConditions as $arrayCondition) {
+                $stringConditionType = ___::arrayFirstKey($arrayCondition);
+                $arrayConditionData = ___::arrayGet($arrayCondition, $stringConditionType, null);
+                $arrayStatements = ___::arrayGet($arrayConditionData, 'statements', null);
+
+                foreach ($arrayStatements as $arrayStatement) {
+                    $stringStatementType = ___::arrayFirstKey($arrayStatement);
+                    $arrayStatementData = ___::arrayGet($arrayStatement, $stringStatementType, null);
+
+                    if (in_array($stringStatementType, ['condition', 'conditions'])) {
+                        $mixedResult = $this->conditions($arrayStatementData);
+                    } else {
+                        $arrayArguments = array_map(
+                            function (array $arrayArgument) {
+                                $stringArgumentKey = ___::arrayFirstKey($arrayArgument);
+                                $mixedArgumentValue = ___::arrayGet($arrayArgument, $stringArgumentKey, null);
+                                switch ($stringArgumentKey) {
+                                    case 'variable':
+                                        return $this->variablesGet($mixedArgumentValue, null);
+                                    default:
+                                        return $mixedArgumentValue;
+                                }
+                            },
+                            ___::arrayGet($arrayStatementData, 'arguments', [])
+                        );
+
+                        // support more than one argument, middle argument is the operator ( type )
+                        switch (count($arrayArguments)) {
+                            case 1:
+                                $mixedLeft = $arrayArguments[0];
+                                $mixedRight = null;
                                 break;
-                            case 'value':
-                                return $this->array_get($arrayParameter, 'value', null);
+                            case 2:
+                                $mixedLeft = $arrayArguments[0];
+                                $mixedRight = $arrayArguments[1];
                                 break;
+                            case 3:
+                                $mixedLeft = $arrayArguments[0];
+                                $stringStatementType = $arrayArguments[1];
+                                $mixedRight = $arrayArguments[2];
+                                break;
+                            default:
+                                $mixedLeft = null;
+                                $mixedRight = null;
                         }
 
-                        return null;
+                        switch ($stringStatementType) {
+                            case 'lt':
+                            case '<':
+                                $mixedResult = (
+                                    is_numeric($mixedLeft)
+                                    && is_null($mixedRight)
+                                        ? ($mixedLeft < 0)
+                                        : (
+                                            is_numeric($mixedLeft)
+                                            && is_numeric($mixedRight)
+                                            && ($mixedLeft < $mixedRight)
+                                        )
+                                );
+                                break;
+                            case 'lte':
+                            case '<=':
+                                $mixedResult = (
+                                    is_numeric($mixedLeft)
+                                    && is_null($mixedRight)
+                                        ? ($mixedLeft <= 0)
+                                        : (
+                                            is_numeric($mixedLeft)
+                                            && is_numeric($mixedRight)
+                                            && ($mixedLeft <= $mixedRight)
+                                        )
+                                );
+                                break;
+                            case 'eq':
+                            case '==':
+                                $mixedResult = (
+                                    is_numeric($mixedLeft)
+                                    && is_null($mixedRight)
+                                        ? ($mixedLeft == 0)
+                                        : (
+                                            is_numeric($mixedLeft)
+                                            && is_numeric($mixedRight)
+                                            && ($mixedLeft == $mixedRight)
+                                        )
+                                );
+                                break;
+                            case '===':
+                                $mixedResult = (
+                                    is_numeric($mixedLeft)
+                                    && is_null($mixedRight)
+                                        ? ($mixedLeft === 0)
+                                        : (
+                                            is_numeric($mixedLeft)
+                                            && is_numeric($mixedRight)
+                                            && ($mixedLeft === $mixedRight)
+                                        )
+                                );
+                                break;
+                            case 'neq':
+                            case '!=':
+                                $mixedResult = (
+                                    is_numeric($mixedLeft)
+                                    && is_null($mixedRight)
+                                        ? ($mixedLeft != 0)
+                                        : (
+                                            is_numeric($mixedLeft)
+                                            && is_numeric($mixedRight)
+                                            && ($mixedLeft != $mixedRight)
+                                        )
+                                );
+                                break;
+                            case 'gt':
+                            case '>':
+                                $mixedResult = (
+                                    is_numeric($mixedLeft)
+                                    && is_null($mixedRight)
+                                        ? ($mixedLeft > 0)
+                                        : (
+                                            is_numeric($mixedLeft)
+                                            && is_numeric($mixedRight)
+                                            && ($mixedLeft > $mixedRight)
+                                        )
+                                );
+                                break;
+                            case 'gte':
+                            case '>=':
+                                $mixedResult = (
+                                    is_numeric($mixedLeft)
+                                    && is_null($mixedRight)
+                                        ? ($mixedLeft >= 0)
+                                        : (
+                                            is_numeric($mixedLeft)
+                                            && is_numeric($mixedRight)
+                                            && ($mixedLeft >= $mixedRight)
+                                        )
+                                );
+                                break;
+                            default:
+                                $mixedResult = false;
+                        }
+
+                        if (
+                            (
+                                $mixedResult
+                                && is_array(
+                                    $arrayEvaluates = ___::arrayGet($arrayStatementData, 'true', null)
+                                )
+                            )
+                            || (
+                                !$mixedResult
+                                && is_array(
+                                    $arrayEvaluates = ___::arrayGet($arrayStatementData, 'false', null)
+                                )
+                            )
+                        ) {
+                            $mixedResult = $this->evaluate($arrayEvaluates, false);
+                        }
+                    }
+
+                    if (
+                        (
+                            $mixedResult
+                            && 'some' === $stringConditionType
+                        )
+                        || (
+                            !$mixedResult
+                            && 'every' === $stringConditionType
+                        )
+                    ) {
+                        break;
+                    }
+                }
+
+                if (
+                    (
+                        $mixedResult
+                        && is_array(
+                            $arrayEvaluates = ___::arrayGet($arrayConditionData, 'true', null)
+                        )
+                    )
+                    || (
+                        !$mixedResult
+                        && is_array(
+                            $arrayEvaluates = ___::arrayGet($arrayConditionData, 'false', null)
+                        )
+                    )
+                ) {
+                    $mixedResult = $this->evaluate($arrayEvaluates, false);
+                }
+            }
+        }
+        $this->intConditionsRecursions--;
+        $this->variablesSet('return', $mixedResult);
+        return $mixedResult;
+    }
+
+    /**
+     * @param array $arrayExecutes
+     * @return false|mixed|null
+     */
+    private function executes(array $arrayExecutes = []) {
+        $mixedResult = null;
+        foreach ($arrayExecutes as $arrayExecute) {
+            $stringFunctionName = ___::arrayFirstKey($arrayExecute);
+            $mixedFunctionData = ___::arrayGet($arrayExecute, $stringFunctionName, null);
+
+            $callable = $this->functionsGet($stringFunctionName, null);
+
+//            echo 'FUNC: ' . $stringFunctionName . PHP_EOL;
+//            echo 'CALLABLE: ' . (is_callable($callable) ? 'yes' : 'no') . PHP_EOL;
+//            echo 'ALLOWED: ' . ($this->functionsAllowed($stringFunctionName) ? 'yes' : 'no') . PHP_EOL;
+//            echo 'EXISTS: ' . (function_exists($stringFunctionName) ? 'yes' : 'no') . PHP_EOL;
+
+            $mixedResult = call_user_func_array(
+                (
+                    is_callable($callable)
+                        ? $callable
+                        : (
+                            $this->functionsAllowed($stringFunctionName)
+                            && function_exists($stringFunctionName)
+                                ? $stringFunctionName
+                                : function() { return null; }
+                        )
+                ),
+                array_map(
+                    function (array $arrayArgument) {
+                        $stringArgumentKey = ___::arrayFirstKey($arrayArgument);
+                        $mixedArgumentValue = ___::arrayGet($arrayArgument, $stringArgumentKey, null);
+                        switch ($stringArgumentKey) {
+                            case 'variable':
+                                return $this->variablesGet($mixedArgumentValue, null);
+                            default:
+                                return $mixedArgumentValue;
+                        }
                     },
-                    $this->array_get($arrayFunction, 'parameters', [])
-                );
-            } else {
-                $arrayParameters = [];
-            }
+                    ___::arrayGet($mixedFunctionData, 'arguments', [])
+                )
+            );
 
-            $result = null;
-
-            if (in_array($this->array_get($arrayFunction, 'type', null), array_keys($this->arraySupportedFiveCodeFunctions))) {
-                $result = call_user_func_array($this->array_get($this->arraySupportedFiveCodeFunctions, $this->array_get($arrayFunction, 'type', null), null), $arrayParameters);
-            }
-
-            if (!empty($result)) {
-                foreach ($this->array_get($arrayFunction, 'returns', []) as $arrayReturn) {
-                    switch ($this->array_get($arrayReturn, 'type', null)) {
+            if (!empty($mixedResult)) {
+                foreach (___::arrayGet($mixedFunctionData, 'returns', []) as $arrayReturn) {
+                    $stringReturnKey = ___::arrayFirstKey($arrayReturn);
+                    $mixedReturnValue = ___::arrayGet($arrayReturn, $stringReturnKey, null);
+                    switch ($stringReturnKey) {
                         case 'variable':
-                            $this->variable($this->array_get($arrayReturn, 'variable', 'default'), $result);
+                            $this->variablesSet($mixedReturnValue, $mixedResult);
                             break;
                     }
                 }
             }
+
         }
+
+        $this->variablesSet('return', $mixedResult);
+        return $mixedResult;
     }
 
     /**
-     * This function gets called when the FiveCode instructions require some conditions to be met first before executing more instructions.
-     * This supports basic comparitions between two variables and/or values either referenced or defined within the instructions data.
-     *
-     * @param array $arrayConditions
-     * @return array
+     * @param null $mixedDefault
+     * @return array|\ArrayAccess|mixed|null
      */
-    private function conditions(array $arrayConditions = []) {
-        $boolAll = true;
-        $boolAny = false;
-        foreach ($arrayConditions as $arrayCondition) {
-            switch ($this->array_get($arrayCondition, 'type', null)) {
-                case 'compare':
-                    switch ($this->array_get($arrayCondition, 'left.type', null)) {
-                        case 'variable':
-                            $mixedLeft = $this->variable($this->array_get($arrayCondition, 'left.variable', 'default'));
-                            break;
-                        case 'value':
-                            $mixedLeft = $this->array_get($arrayCondition, 'left.value', 'BlueBatBerryWalk' . microtime(true)); // random weird default to prevent accidental matching
-                            break;
-                    }
-                    switch ($this->array_get($arrayCondition, 'right.type', null)) {
-                        case 'variable':
-                            $mixedRight = $this->variable($this->array_get($arrayCondition, 'right.variable', 'default'));
-                            break;
-                        case 'value':
-                            $mixedRight = $this->array_get($arrayCondition, 'right.value', 'SandMouseCherryWheel' . microtime(true)); // random weird default to prevent accidental matching
-                            break;
-                    }
-                    switch ($this->array_get($arrayCondition, 'operator', null)) {
-                        case 'lt':
-                        case '<':
-                            if ($mixedLeft < $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'lte':
-                        case '<=':
-                            if ($mixedLeft <= $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'eq':
-                        case '==':
-                            if ($mixedLeft == $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'neq':
-                        case '!=':
-                            if ($mixedLeft != $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'gt':
-                        case '>':
-                            if ($mixedLeft > $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'gte':
-                        case '>=':
-                            if ($mixedLeft >= $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                    }
-                    break;
-            }
-        }
-        return ['all' => $boolAll, 'any' => $boolAny];
-    }
-
-    /**
-     * This function gets called when the instructions call on an iterator of either for or each where classic iterator
-     * behaviour takes place. You can for loop by setting the start number, its limit and stepping or provide an array
-     * of things to iterate over for further execution of instructions from within the iterator loop. While iterating
-     * you can reference the index and value ( if using each ) from the normal variables design and if you need to nest
-     * multiple iterators and retain their index and/or value then you can also define an identifier that isolates the
-     * index and value away from accidental override from subsequent iterators.
-     *
-     * @param array $arrayIterators
-     */
-    private function iterators(array $arrayIterators = []) {
-        foreach ($arrayIterators as $arrayIterator) {
-            $stringIdentifier = $this->array_get($arrayIterator, 'identifier', null);
-            switch ($this->array_get($arrayIterator, 'type', null)) {
-                case 'for':
-                    for (
-                        $i = $this->array_get($arrayIterator, 'start', 1);
-                        $i <= $this->array_get($arrayIterator, 'limit', 10);
-                        $i += $this->array_get($arrayIterator, 'step', 1)
-                    ) {
-                        $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'index', $i);
-                        $this->instructions($this->array_get($arrayIterator, 'instructions', []));
-                    }
-                    break;
-                case 'each':
-                    $arrayToIterate = [];
-                    switch ($this->array_get($arrayIterator, 'each', null)) {
-                        case 'variable':
-                            $arrayToIterate = $this->variable($this->array_get($arrayIterator, 'variable', 'default'));
-                            break;
-                        case 'value':
-                            $arrayToIterate = $this->array_get($arrayIterator, 'value', []);
-                            break;
-                    }
-
-                    if (is_array($arrayToIterate)) {
-                        foreach ($arrayToIterate as $mixedIterateKey => $mixedIterateValue) {
-                            $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'index', $mixedIterateKey);
-                            $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'value', $mixedIterateValue);
-                            $this->instructions($this->array_get($arrayIterator, 'instructions', []));
-                        }
-                    }
-                    break;
-            }
-            $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'index', null);
-            $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'value', null);
-        }
+    public function return($mixedDefault = null) {
+        return $this->variablesGet('return', $mixedDefault);
     }
 }

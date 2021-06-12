@@ -44,7 +44,7 @@ $ composer require mossengine/fivecode
 require 'vendor/autoload.php';
 
 // Instantiate a FiveCode class
-$classFiveCode = new Mossengine\FiveCode\FiveCode;
+$classFiveCode = new Mossengine\FiveCode\FiveCode1;
 
 // Execute an array of JCode directly into the class
 $classFiveCode->execute([
