@@ -315,7 +315,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    public function testEvaluation() {
+    public function testInstruction() {
         $fiveCode = Mossengine\FiveCode\FiveCode::make();
 
         $fiveCode->evaluate([
@@ -326,11 +326,11 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(
             'A',
             $fiveCode->variablesGet('a'),
-            'The variable at key a should have been set by the evaluation.'
+            'The variable at key a should have been set by the instruction.'
         );
     }
 
-    public function testEvaluationReturn() {
+    public function testInstructionReturn() {
         $this->assertEquals(
             20,
             Mossengine\FiveCode\FiveCode::make([
@@ -355,11 +355,11 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]],
                 ])
                 ->return(),
-            'The return from the evaluate should be the results of the last evaluation.'
+            'The return from the evaluate should be the results of the last instruction.'
         );
     }
 
-    public function testEvaluations() {
+    public function testInstructions() {
         $fiveCode = Mossengine\FiveCode\FiveCode::make([
             'functions' => [
                 'default' => [
@@ -384,7 +384,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ]],
-            ['evaluates' => [
+            ['instructions' => [
                 ['execute' => [
                     'a' => [
                         'arguments' => [

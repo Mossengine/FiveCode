@@ -166,26 +166,36 @@ class FiveCode
     private $intEvaluationsRecursions = 0;
 
     /**
-     * @param array $arrayEvaluations
-     * @param bool $boolReturnSelf
+     * @param array $arrayInstructions
+     * @return $this
+     * @throws EvaluationException
+     * @throws FunctionException
+     */
+    public function evaluate(array $arrayInstructions = []) : self {
+        $this->instructions($arrayInstructions);
+        return $this;
+    }
+
+    /**
+     * @param array $arrayInstructions
      * @return bool|mixed|FiveCode|null
      * @throws EvaluationException
      * @throws FunctionException
      */
-    public function evaluate(array $arrayEvaluations = [], bool $boolReturnSelf = true) {
+    public function instructions(array $arrayInstructions = []) {
         $this->intEvaluationsRecursions++;
         $mixedResult = null;
 
         if ($this->intEvaluationsRecursions < 10) {
-            foreach ($arrayEvaluations as $arrayEvaluation) {
+            foreach ($arrayInstructions as $arrayEvaluation) {
                 $stringEvaluationType = ___::arrayFirstKey($arrayEvaluation);
                 $mixedEvaluationData = ___::arrayGet($arrayEvaluation, $stringEvaluationType, []);
                 switch ($stringEvaluationType) {
-                    case 'evaluate':
-                        $mixedResult = $this->evaluate([$mixedEvaluationData], false);
+                    case 'instruction':
+                        $mixedResult = $this->instructions([$mixedEvaluationData]);
                         break;
-                    case 'evaluates':
-                        $mixedResult = $this->evaluate($mixedEvaluationData, false);
+                    case 'instructions':
+                        $mixedResult = $this->instructions($mixedEvaluationData);
                         break;
                     case 'variable':
                         $mixedResult = $this->variables([$mixedEvaluationData]);
@@ -218,7 +228,7 @@ class FiveCode
         }
         $this->intEvaluationsRecursions--;
         $this->variablesSet('return', $mixedResult);
-        return $boolReturnSelf ? $this : $mixedResult;
+        return $mixedResult;
     }
 
     /**
@@ -469,17 +479,17 @@ class FiveCode
                             (
                                 $mixedResult
                                 && is_array(
-                                    $arrayEvaluates = ___::arrayGet($arrayStatementData, 'true', null)
+                                    $arrayInstructions = ___::arrayGet($arrayStatementData, 'true', null)
                                 )
                             )
                             || (
                                 !$mixedResult
                                 && is_array(
-                                    $arrayEvaluates = ___::arrayGet($arrayStatementData, 'false', null)
+                                    $arrayInstructions = ___::arrayGet($arrayStatementData, 'false', null)
                                 )
                             )
                         ) {
-                            $mixedResult = $this->evaluate($arrayEvaluates, false);
+                            $mixedResult = $this->instructions($arrayInstructions);
                         }
                     }
 
@@ -501,17 +511,17 @@ class FiveCode
                     (
                         $mixedResult
                         && is_array(
-                            $arrayEvaluates = ___::arrayGet($arrayConditionData, 'true', null)
+                            $arrayInstructions = ___::arrayGet($arrayConditionData, 'true', null)
                         )
                     )
                     || (
                         !$mixedResult
                         && is_array(
-                            $arrayEvaluates = ___::arrayGet($arrayConditionData, 'false', null)
+                            $arrayInstructions = ___::arrayGet($arrayConditionData, 'false', null)
                         )
                     )
                 ) {
-                    $mixedResult = $this->evaluate($arrayEvaluates, false);
+                    $mixedResult = $this->instructions($arrayInstructions);
                 }
             }
         }
