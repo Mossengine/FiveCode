@@ -58,10 +58,13 @@ class FiveCode
     private $arrayFunctionsAllowed = [];
 
     /**
-     * @param array $arrayFunctionsAllowed
-     * @return $this
+     * @param array|null $arrayFunctionsAllowed
+     * @return $this|array|null
      */
-    public function functionsAllowed(array $arrayFunctionsAllowed = []) : self {
+    public function functionsAllowed(array $arrayFunctionsAllowed = null) {
+        if (is_null($arrayFunctionsAllowed)) {
+            return $this->arrayFunctionsAllowed;
+        }
         $this->arrayFunctionsAllowed = $arrayFunctionsAllowed;
         return $this;
     }
@@ -131,10 +134,13 @@ class FiveCode
     private $arrayVariablesAllowed = [];
 
     /**
-     * @param array $arrayVariablesAllowed
-     * @return $this
+     * @param array|null $arrayVariablesAllowed
+     * @return $this|array|null
      */
-    public function variablesAllowed(array $arrayVariablesAllowed = []) : self {
+    public function variablesAllowed(array $arrayVariablesAllowed = null) {
+        if (is_null($arrayVariablesAllowed)) {
+            return $this->arrayVariablesAllowed;
+        }
         $this->arrayVariablesAllowed = $arrayVariablesAllowed;
         return $this;
     }
@@ -230,6 +236,12 @@ class FiveCode
                     case 'variables':
                         $mixedResult = $this->parseVariables($mixedEvaluationData);
                         break;
+                    case 'value':
+                        $mixedResult = $this->parseValues([$mixedEvaluationData]);
+                        break;
+                    case 'values':
+                        $mixedResult = $this->parseValues($mixedEvaluationData);
+                        break;
                     case 'function':
                         $this->parseFunctions([$mixedEvaluationData]);
                         break;
@@ -309,6 +321,20 @@ class FiveCode
         }
 
         $this->variableSet('return', $mixedResult);
+        return $mixedResult;
+    }
+
+    /**
+     * @param array $arrayValues
+     * @return null
+     */
+    public function parseValues(array $arrayValues = []) {
+        $mixedResult = null;
+
+        foreach ($arrayValues as $mixedValue) {
+            $this->variableSet('return', ($mixedResult = $mixedValue));
+        }
+
         return $mixedResult;
     }
 

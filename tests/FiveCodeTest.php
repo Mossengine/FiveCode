@@ -16,6 +16,71 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($fiveCode instanceof Mossengine\FiveCode\FiveCode);
     }
 
+    public function testIfCanBeMadeWithConstructors() {
+        $fiveCode = Mossengine\FiveCode\FiveCode::make([
+            'functions' => [
+                'default' => [
+                    'a' => function() { return 'A'; }
+                ],
+                'allowed' => [
+                    'a' => true
+                ]
+            ],
+            'variables' => [
+                'default' => [
+                    'a' => 'A',
+                    'b' => [
+                        'c' => [
+                            'd' => 'D'
+                        ]
+                    ]
+                ],
+                'allowed' => [
+                    'a' => true,
+                    'b' => [
+                        'c' => [
+                            'get' => true
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+        $this->assertEquals(
+            [
+                'a' => function() { return 'A'; }
+            ],
+            $fiveCode->functions()
+        );
+        $this->assertEquals(
+            [
+                'a' => true
+            ],
+            $fiveCode->functionsAllowed()
+        );
+        $this->assertEquals(
+            [
+                'a' => 'A',
+                'b' => [
+                    'c' => [
+                        'd' => 'D'
+                    ]
+                ]
+            ],
+            $fiveCode->variables()
+        );
+        $this->assertEquals(
+            [
+                'a' => true,
+                'b' => [
+                    'c' => [
+                        'get' => true
+                    ]
+                ]
+            ],
+            $fiveCode->variablesAllowed()
+        );
+    }
+
     public function testIfFunctionsAllowed() {
         $this->assertFalse(
             Mossengine\FiveCode\FiveCode::make()
@@ -268,6 +333,52 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testIfValues() {
+        $this->assertEquals(
+            'a',
+            Mossengine\FiveCode\FiveCode::make()
+                ->evaluate([
+                    ['value' => 'a']
+                ])
+                ->return()
+        );
+        $this->assertEquals(
+            'c',
+            Mossengine\FiveCode\FiveCode::make()
+                ->evaluate([
+                    ['values' => ['a', 'b', 'c']]
+                ])
+                ->return()
+        );
+        $this->assertEquals(
+            'yes',
+            Mossengine\FiveCode\FiveCode::make()
+                ->evaluate([
+                    ['value' => 'a'],
+                    ['value' => 'b'],
+                    ['condition' => [
+                        'every' => [
+                            'statements' => [
+                                ['==' => [
+                                    'arguments' => [
+                                        ['value' => 5],
+                                        ['value' => 5]
+                                    ],
+                                    'true' => [
+                                        ['value' => 'yes']
+                                    ],
+                                    'false' => [
+                                        ['value' => 'no']
+                                    ]
+                                ]]
+                            ]
+                        ]
+                    ]]
+                ])
+                ->return()
+        );
+    }
+
     public function testIfItCanSetGetAndForgetVariables() {
         $fiveCode = Mossengine\FiveCode\FiveCode::make();
 
@@ -291,6 +402,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             'The value at key a should not exist and the default value of 9 should be returned.'
         );
     }
+
     public function testIfItCanSetGetAndForgetFunctions() {
         $fiveCode = Mossengine\FiveCode\FiveCode::make();
 
@@ -674,4 +786,5 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             'The return from the evaluate should be failure based on the condition not being true and triggering the false to set return variable to failure'
         );
     }
+
 }
