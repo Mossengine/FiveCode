@@ -17,10 +17,22 @@ class FiveCode
     private $arrayFunctions = [];
 
     /**
+     * @param array|null $arrayFunctions
+     * @return $this|array
+     */
+    public function functions(array $arrayFunctions = null) {
+        if (is_null($arrayFunctions)) {
+            return $this->arrayFunctions;
+        }
+        $this->arrayFunctions = $arrayFunctions;
+        return $this;
+    }
+
+    /**
      * @param $stringName
      * @param $mixedCallable
      */
-    public function functionsSet($stringName, $mixedCallable) {
+    public function functionSet($stringName, $mixedCallable) {
         ___::arraySet($this->arrayFunctions, $stringName, $mixedCallable);
     }
 
@@ -29,21 +41,14 @@ class FiveCode
      * @param null $mixedDefault
      * @return array|\ArrayAccess|mixed|null
      */
-    public function functionsGet($stringName, $mixedDefault = null) {
+    public function functionGet($stringName, $mixedDefault = null) {
         return ___::arrayGet($this->arrayFunctions, $stringName, $mixedDefault);
-    }
-
-    /**
-     * @return array
-     */
-    public function functionsAll() : array {
-        return $this->arrayFunctions;
     }
 
     /**
      * @param $stringName
      */
-    public function functionsForget($stringName) {
+    public function functionForget($stringName) {
         ___::arrayForget($this->arrayFunctions, $stringName);
     }
 
@@ -53,10 +58,19 @@ class FiveCode
     private $arrayFunctionsAllowed = [];
 
     /**
+     * @param array $arrayFunctionsAllowed
+     * @return $this
+     */
+    public function functionsAllowed(array $arrayFunctionsAllowed = []) : self {
+        $this->arrayFunctionsAllowed = $arrayFunctionsAllowed;
+        return $this;
+    }
+
+    /**
      * @param $stringName
      * @return bool
      */
-    public function functionsAllowed($stringName) : bool {
+    public function isFunctionAllowed($stringName) : bool {
         return true === (
             ___::arrayGet(
                 $this->arrayFunctionsAllowed,
@@ -76,10 +90,22 @@ class FiveCode
     private $arrayVariables = [];
 
     /**
+     * @param array|null $arrayVariables
+     * @return $this|array
+     */
+    public function variables(array $arrayVariables = null) {
+        if (is_null($arrayVariables)) {
+            return $this->arrayVariables;
+        }
+        $this->arrayVariables = $arrayVariables;
+        return $this;
+    }
+
+    /**
      * @param $stringPath
      * @param $mixedValue
      */
-    public function variablesSet($stringPath, $mixedValue) {
+    public function variableSet($stringPath, $mixedValue) {
         ___::arraySet($this->arrayVariables, $stringPath, $mixedValue);
     }
 
@@ -88,21 +114,14 @@ class FiveCode
      * @param $mixedDefault
      * @return array|\ArrayAccess|mixed|null
      */
-    public function variablesGet($stringPath, $mixedDefault = null) {
+    public function variableGet($stringPath, $mixedDefault = null) {
         return ___::arrayGet($this->arrayVariables, $stringPath, $mixedDefault);
-    }
-
-    /**
-     * @return array
-     */
-    public function variablesAll() : array {
-        return $this->arrayVariables;
     }
 
     /**
      * @param $stringPath
      */
-    public function variablesForget($stringPath) {
+    public function variableForget($stringPath) {
         ___::arrayForget($this->arrayVariables, $stringPath);
     }
 
@@ -112,11 +131,20 @@ class FiveCode
     private $arrayVariablesAllowed = [];
 
     /**
+     * @param array $arrayVariablesAllowed
+     * @return $this
+     */
+    public function variablesAllowed(array $arrayVariablesAllowed = []) : self {
+        $this->arrayVariablesAllowed = $arrayVariablesAllowed;
+        return $this;
+    }
+
+    /**
      * @param string $stringVariableNameOrPath
      * @param string $stringAction
      * @return bool
      */
-    public function variablesAllowed(string $stringVariableNameOrPath, string $stringAction = '*') : bool {
+    public function isVariableAllowed(string $stringVariableNameOrPath, string $stringAction = '*') : bool {
         return (
             true === (
                 ___::arrayGet(
@@ -145,11 +173,10 @@ class FiveCode
      * @param array $arrayParameters
      */
     public function __construct(array $arrayParameters = []) {
-        $this->arrayFunctions = ___::arrayGet($arrayParameters, 'functions.default', []);
-        $this->arrayFunctionsAllowed = ___::arrayGet($arrayParameters, 'functions.allowed', []);
-
-        $this->arrayVariables = ___::arrayGet($arrayParameters, 'variables.default', []);
-        $this->arrayVariablesAllowed = ___::arrayGet($arrayParameters, 'variables.allowed', []);
+        $this->functions(___::arrayGet($arrayParameters, 'functions.default', []))
+            ->functionsAllowed(___::arrayGet($arrayParameters, 'functions.allowed', []))
+            ->variables(___::arrayGet($arrayParameters, 'variables.default', []))
+            ->variablesAllowed(___::arrayGet($arrayParameters, 'variables.allowed', []));
     }
 
     /**
@@ -172,7 +199,7 @@ class FiveCode
      * @throws FunctionException
      */
     public function evaluate(array $arrayInstructions = []) : self {
-        $this->instructions($arrayInstructions);
+        $this->parseInstructions($arrayInstructions);
         return $this;
     }
 
@@ -182,7 +209,7 @@ class FiveCode
      * @throws EvaluationException
      * @throws FunctionException
      */
-    public function instructions(array $arrayInstructions = []) {
+    public function parseInstructions(array $arrayInstructions = []) {
         $this->intEvaluationsRecursions++;
         $mixedResult = null;
 
@@ -192,34 +219,34 @@ class FiveCode
                 $mixedEvaluationData = ___::arrayGet($arrayEvaluation, $stringEvaluationType, []);
                 switch ($stringEvaluationType) {
                     case 'instruction':
-                        $mixedResult = $this->instructions([$mixedEvaluationData]);
+                        $mixedResult = $this->parseInstructions([$mixedEvaluationData]);
                         break;
                     case 'instructions':
-                        $mixedResult = $this->instructions($mixedEvaluationData);
+                        $mixedResult = $this->parseInstructions($mixedEvaluationData);
                         break;
                     case 'variable':
-                        $mixedResult = $this->variables([$mixedEvaluationData]);
+                        $mixedResult = $this->parseVariables([$mixedEvaluationData]);
                         break;
                     case 'variables':
-                        $mixedResult = $this->variables($mixedEvaluationData);
+                        $mixedResult = $this->parseVariables($mixedEvaluationData);
                         break;
                     case 'function':
-                        $this->functions([$mixedEvaluationData]);
+                        $this->parseFunctions([$mixedEvaluationData]);
                         break;
                     case 'functions':
-                        $this->functions($mixedEvaluationData);
+                        $this->parseFunctions($mixedEvaluationData);
                         break;
                     case 'condition':
-                        $mixedResult = $this->conditions([$mixedEvaluationData]);
+                        $mixedResult = $this->parseConditions([$mixedEvaluationData]);
                         break;
                     case 'conditions':
-                        $mixedResult = $this->conditions($mixedEvaluationData);
+                        $mixedResult = $this->parseConditions($mixedEvaluationData);
                         break;
                     case 'execute':
-                        $mixedResult = $this->executes([$mixedEvaluationData]);
+                        $mixedResult = $this->parseExecutes([$mixedEvaluationData]);
                         break;
                     case 'executes':
-                        $mixedResult = $this->executes($mixedEvaluationData);
+                        $mixedResult = $this->parseExecutes($mixedEvaluationData);
                         break;
                     default:
                         throw new EvaluationException('Invalid evaluation key : ' . $stringEvaluationType);
@@ -227,7 +254,7 @@ class FiveCode
             }
         }
         $this->intEvaluationsRecursions--;
-        $this->variablesSet('return', $mixedResult);
+        $this->variableSet('return', $mixedResult);
         return $mixedResult;
     }
 
@@ -236,7 +263,7 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      * @throws EvaluationException
      */
-    public function variables(array $arrayVariables = []) {
+    public function parseVariables(array $arrayVariables = []) {
         $mixedResult = null;
 
         foreach ($arrayVariables as $arrayVariable) {
@@ -251,37 +278,37 @@ class FiveCode
                         empty($this->arrayVariablesAllowed)
                         || (
                             ['*'] === array_keys($this->arrayVariablesAllowed)
-                            && $this->variablesAllowed('*', 'get')
+                            && $this->isVariableAllowed('*', 'get')
                         )
-                            ? $this->variablesAll()
+                            ? $this->variables()
                             : []
                     );
                     break;
                 case 'get':
                     $mixedResult = (
-                        $this->variablesAllowed($mixedVariableKey, 'get')
-                            ? $this->variablesGet($mixedVariableKey, $mixedVariableValueOrDefault)
+                        $this->isVariableAllowed($mixedVariableKey, 'get')
+                            ? $this->variableGet($mixedVariableKey, $mixedVariableValueOrDefault)
                             : null
                     );
                     break;
                 case 'set':
-                    if ($this->variablesAllowed($mixedVariableKey, 'set')) {
-                        $this->variablesSet($mixedVariableKey, $mixedVariableValueOrDefault);
+                    if ($this->isVariableAllowed($mixedVariableKey, 'set')) {
+                        $this->variableSet($mixedVariableKey, $mixedVariableValueOrDefault);
                     }
-                    $mixedResult = $this->variablesGet('return', $mixedResult);
+                    $mixedResult = $this->variableGet('return', $mixedResult);
                     break;
                 case 'forget':
-                    if ($this->variablesAllowed($mixedVariableKey, 'forget')) {
-                        $this->variablesForget($mixedVariableKey);
+                    if ($this->isVariableAllowed($mixedVariableKey, 'forget')) {
+                        $this->variableForget($mixedVariableKey);
                     }
-                    $mixedResult = $this->variablesGet('return', $mixedResult);
+                    $mixedResult = $this->variableGet('return', $mixedResult);
                     break;
                 default:
                     throw new EvaluationException('Invalid variable type : ' . $stringVariableType);
             }
         }
 
-        $this->variablesSet('return', $mixedResult);
+        $this->variableSet('return', $mixedResult);
         return $mixedResult;
     }
 
@@ -289,7 +316,7 @@ class FiveCode
      * @param array $arrayFunctions
      * @throws FunctionException
      */
-    private function functions(array $arrayFunctions = []) {
+    private function parseFunctions(array $arrayFunctions = []) {
         foreach ($arrayFunctions as $arrayFunction) {
             $stringFunctionType = ___::arrayFirstKey($arrayFunction);
             $mixedFunctionData = ___::arrayGet($arrayFunction, $stringFunctionType, null);
@@ -303,10 +330,10 @@ class FiveCode
 
             switch ($stringFunctionType) {
                 case 'set':
-                    $this->functionsSet($mixedFunctionName, $mixedFunctionCallable);
+                    $this->functionSet($mixedFunctionName, $mixedFunctionCallable);
                     break;
                 case 'forget':
-                    $this->functionsForget($mixedFunctionName);
+                    $this->functionForget($mixedFunctionName);
                     break;
                 default:
                     throw new FunctionException('Invalid function type : ' . $stringFunctionType);
@@ -325,7 +352,7 @@ class FiveCode
      * @throws EvaluationException
      * @throws FunctionException
      */
-    private function conditions(array $arrayConditions = []) {
+    private function parseConditions(array $arrayConditions = []) {
         $this->intConditionsRecursions++;
         $mixedResult = null;
 
@@ -340,7 +367,7 @@ class FiveCode
                     $arrayStatementData = ___::arrayGet($arrayStatement, $stringStatementType, null);
 
                     if (in_array($stringStatementType, ['condition', 'conditions'])) {
-                        $mixedResult = $this->conditions($arrayStatementData);
+                        $mixedResult = $this->parseConditions($arrayStatementData);
                     } else {
                         $arrayArguments = array_map(
                             function (array $arrayArgument) {
@@ -349,8 +376,8 @@ class FiveCode
                                 switch ($stringArgumentKey) {
                                     case 'variable':
                                         return (
-                                            $this->variablesAllowed($mixedArgumentValue, 'get')
-                                                ? $this->variablesGet($mixedArgumentValue, null)
+                                            $this->isVariableAllowed($mixedArgumentValue, 'get')
+                                                ? $this->variableGet($mixedArgumentValue, null)
                                                 : null
                                         );
                                     default:
@@ -489,7 +516,7 @@ class FiveCode
                                 )
                             )
                         ) {
-                            $mixedResult = $this->instructions($arrayInstructions);
+                            $mixedResult = $this->parseInstructions($arrayInstructions);
                         }
                     }
 
@@ -521,12 +548,12 @@ class FiveCode
                         )
                     )
                 ) {
-                    $mixedResult = $this->instructions($arrayInstructions);
+                    $mixedResult = $this->parseInstructions($arrayInstructions);
                 }
             }
         }
         $this->intConditionsRecursions--;
-        $this->variablesSet('return', $mixedResult);
+        $this->variableSet('return', $mixedResult);
         return $mixedResult;
     }
 
@@ -534,13 +561,13 @@ class FiveCode
      * @param array $arrayExecutes
      * @return false|mixed|null
      */
-    private function executes(array $arrayExecutes = []) {
+    private function parseExecutes(array $arrayExecutes = []) {
         $mixedResult = null;
         foreach ($arrayExecutes as $arrayExecute) {
             $stringFunctionName = ___::arrayFirstKey($arrayExecute);
             $mixedFunctionData = ___::arrayGet($arrayExecute, $stringFunctionName, null);
 
-            $callable = $this->functionsGet($stringFunctionName, null);
+            $callable = $this->functionGet($stringFunctionName, null);
 
 //            echo 'FUNC: ' . $stringFunctionName . PHP_EOL;
 //            echo 'CALLABLE: ' . (is_callable($callable) ? 'yes' : 'no') . PHP_EOL;
@@ -552,7 +579,7 @@ class FiveCode
                     is_callable($callable)
                         ? $callable
                         : (
-                            $this->functionsAllowed($stringFunctionName)
+                            $this->isFunctionAllowed($stringFunctionName)
                             && function_exists($stringFunctionName)
                                 ? $stringFunctionName
                                 : function() { return null; }
@@ -565,8 +592,8 @@ class FiveCode
                         switch ($stringArgumentKey) {
                             case 'variable':
                                 return (
-                                    $this->variablesAllowed($mixedArgumentValue, 'get')
-                                        ? $this->variablesGet($mixedArgumentValue, null)
+                                    $this->isVariableAllowed($mixedArgumentValue, 'get')
+                                        ? $this->variableGet($mixedArgumentValue, null)
                                         : null
                                 );
                             default:
@@ -583,8 +610,8 @@ class FiveCode
                     $mixedReturnValue = ___::arrayGet($arrayReturn, $stringReturnKey, null);
                     switch ($stringReturnKey) {
                         case 'variable':
-                            if ($this->variablesAllowed($mixedReturnValue, 'set')) {
-                                $this->variablesSet($mixedReturnValue, $mixedResult);
+                            if ($this->isVariableAllowed($mixedReturnValue, 'set')) {
+                                $this->variableSet($mixedReturnValue, $mixedResult);
                             }
                             break;
                     }
@@ -593,7 +620,7 @@ class FiveCode
 
         }
 
-        $this->variablesSet('return', $mixedResult);
+        $this->variableSet('return', $mixedResult);
         return $mixedResult;
     }
 
@@ -602,6 +629,6 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      */
     public function return($mixedDefault = null) {
-        return $this->variablesGet('return', $mixedDefault);
+        return $this->variableGet('return', $mixedDefault);
     }
 }

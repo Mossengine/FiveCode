@@ -19,7 +19,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
     public function testIfFunctionsAllowed() {
         $this->assertFalse(
             Mossengine\FiveCode\FiveCode::make()
-                ->functionsAllowed('any'),
+                ->isFunctionAllowed('any'),
             'No functions indicated, any function False'
         );
         $this->assertTrue(
@@ -30,7 +30,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->functionsAllowed('any'),
+                ->isFunctionAllowed('any'),
             'All functions allowed, Any function True'
         );
         $this->assertFalse(
@@ -41,7 +41,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->functionsAllowed('any'),
+                ->isFunctionAllowed('any'),
             'All functions disallowed, any function False'
         );
         $this->assertTrue(
@@ -52,7 +52,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->functionsAllowed('specific'),
+                ->isFunctionAllowed('specific'),
             'specific function allowed, specific function True'
         );
         $this->assertFalse(
@@ -63,7 +63,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->functionsAllowed('other'),
+                ->isFunctionAllowed('other'),
             'specific function allowed, other function False'
         );
         $this->assertFalse(
@@ -75,7 +75,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->functionsAllowed('specific'),
+                ->isFunctionAllowed('specific'),
             'All functions allowed but specific function disallowed, specific function False'
         );
         $this->assertTrue(
@@ -87,7 +87,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->functionsAllowed('specific'),
+                ->isFunctionAllowed('specific'),
             'specific function allowed but All functions disallowed, specific function True'
         );
     }
@@ -95,7 +95,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
     public function testIfVariablesAllowed() {
         $this->assertTrue(
             Mossengine\FiveCode\FiveCode::make()
-                ->variablesAllowed('any'),
+                ->isVariableAllowed('any'),
             'No variables indicated, any variable True'
         );
         $this->assertTrue(
@@ -106,7 +106,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('any'),
+                ->isVariableAllowed('any'),
             'All variables allowed, Any variable True'
         );
         $this->assertTrue(
@@ -120,7 +120,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('any', 'get'),
+                ->isVariableAllowed('any', 'get'),
             'All variables allowed for specific action while another action disallowed, specific variable action True'
         );
         $this->assertFalse(
@@ -134,7 +134,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('any', 'set'),
+                ->isVariableAllowed('any', 'set'),
             'All variables disallowed for specific action while another action allowed, specific variable action False'
         );
         $this->assertFalse(
@@ -145,7 +145,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('any'),
+                ->isVariableAllowed('any'),
             'All variables disallowed, any variable False'
         );
         $this->assertTrue(
@@ -157,7 +157,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('specific'),
+                ->isVariableAllowed('specific'),
             'specific variable allowed while all variables disallowed, specific variable True'
         );
         $this->assertFalse(
@@ -171,7 +171,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('specific', 'set'),
+                ->isVariableAllowed('specific', 'set'),
             'specific variable action allowed while all other variables disallowed, specific other action variable False'
         );
         $this->assertFalse(
@@ -187,7 +187,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('specific', 'set'),
+                ->isVariableAllowed('specific', 'set'),
             'specific variable action allowed while all other variables action disallowed, specific other action with other variables False'
         );
         $this->assertTrue(
@@ -205,7 +205,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('specific.path.to.thing'),
+                ->isVariableAllowed('specific.path.to.thing'),
             'specific path variable allowed while all other variables disallowed, specific path variable True'
         );
         $this->assertFalse(
@@ -223,7 +223,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('specific.path.to.thing'),
+                ->isVariableAllowed('specific.path.to.thing'),
             'specific path variable disallowed while all other variables allowed, specific path variable False'
         );
         $this->assertTrue(
@@ -243,7 +243,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('specific.path.to.thing', 'get'),
+                ->isVariableAllowed('specific.path.to.thing', 'get'),
             'specific path variable action allowed while all other variables disallowed, specific path variable action True'
         );
         $this->assertFalse(
@@ -263,7 +263,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ]
                 ]
             ])
-                ->variablesAllowed('specific.path.to.thing', 'get'),
+                ->isVariableAllowed('specific.path.to.thing', 'get'),
             'specific path variable action disallowed while all other variables allowed, specific path variable action False'
         );
     }
@@ -273,21 +273,21 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             [],
-            $fiveCode->variablesAll(),
+            $fiveCode->variables(),
             'There should be no variables set'
         );
 
-        $fiveCode->variablesSet('a', 1);
+        $fiveCode->variableSet('a', 1);
         $this->assertEquals(
             1,
-            $fiveCode->variablesGet('a', 9),
+            $fiveCode->variableGet('a', 9),
             'The value at key a should be 1'
         );
 
-        $fiveCode->variablesForget('a');
+        $fiveCode->variableForget('a');
         $this->assertEquals(
             6,
-            $fiveCode->variablesGet('a', 6),
+            $fiveCode->variableGet('a', 6),
             'The value at key a should not exist and the default value of 9 should be returned.'
         );
     }
@@ -296,21 +296,21 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             [],
-            $fiveCode->functionsAll(),
+            $fiveCode->functions(),
             'There should be no functions set'
         );
 
-        $fiveCode->functionsSet('a', function() { return 'A'; });
+        $fiveCode->functionSet('a', function() { return 'A'; });
         $this->assertEquals(
             'A',
-            call_user_func($fiveCode->functionsGet('a')),
+            call_user_func($fiveCode->functionGet('a')),
             'The function at key a should return A'
         );
 
-        $fiveCode->functionsForget('a');
+        $fiveCode->functionForget('a');
         $this->assertEquals(
             'Z',
-            call_user_func($fiveCode->functionsGet('a', function() { return 'Z'; })),
+            call_user_func($fiveCode->functionGet('a', function() { return 'Z'; })),
             'The function at key a should not exist and the default function that returns Z should execute.'
         );
     }
@@ -325,7 +325,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         ]);
         $this->assertEquals(
             'A',
-            $fiveCode->variablesGet('a'),
+            $fiveCode->variableGet('a'),
             'The variable at key a should have been set by the instruction.'
         );
     }
@@ -400,7 +400,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         ]);
         $this->assertEquals(
             70,
-            $fiveCode->variablesGet('d'),
+            $fiveCode->variableGet('d'),
             'The variable at key d should have been set by the execute return which should be 70.'
         );
     }
@@ -431,7 +431,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         ]);
         $this->assertEquals(
             6,
-            $fiveCode->variablesGet('sum'),
+            $fiveCode->variableGet('sum'),
             'The variable at key sum should have been set by the execute return which should be 6.'
         );
     }
@@ -459,7 +459,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         ]);
         $this->assertEquals(
             6,
-            $fiveCode->variablesGet('return'),
+            $fiveCode->variableGet('return'),
             'The return variable should have been set by the execute and should be 6.'
         );
     }
@@ -486,7 +486,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                         ]
                     ]]
                 ])
-                ->variablesGet('return'),
+                ->variableGet('return'),
             'The return variable should be 1 as the allowed functions is an empty array allowing all.'
         );
 
@@ -511,7 +511,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                         ]
                     ]]
                 ])
-                ->variablesGet('return'),
+                ->variableGet('return'),
             'The return variable should be the sum of the array as the array_sum function should have been allowed and executed.'
         );
 
@@ -536,7 +536,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                         ]
                     ]]
                 ])
-                ->variablesGet('return'),
+                ->variableGet('return'),
             'The return variable should be null as the min is not part of the allowed functions list.'
         );
 
@@ -561,7 +561,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                         ]
                     ]]
                 ])
-                ->variablesGet('return'),
+                ->variableGet('return'),
             'The return variable should be null as the min is part of the disallowed functions list.'
         );
     }
