@@ -80,9 +80,7 @@ class FiveCode
      * @param $mixedValue
      */
     public function variablesSet($stringPath, $mixedValue) {
-        if ($this->variablesAllowed($stringPath, 'set')) {
-            ___::arraySet($this->arrayVariables, $stringPath, $mixedValue);
-        }
+        ___::arraySet($this->arrayVariables, $stringPath, $mixedValue);
     }
 
     /**
@@ -91,35 +89,21 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      */
     public function variablesGet($stringPath, $mixedDefault = null) {
-        if ($this->variablesAllowed($stringPath, 'get')) {
-            return ___::arrayGet($this->arrayVariables, $stringPath, $mixedDefault);
-        }
-        return null;
+        return ___::arrayGet($this->arrayVariables, $stringPath, $mixedDefault);
     }
 
     /**
      * @return array
      */
     public function variablesAll() : array {
-        if (
-            empty($this->arrayVariablesAllowed)
-            || (
-                ['*'] === array_keys($this->arrayVariablesAllowed)
-                && $this->variablesAllowed('*', 'get')
-            )
-        ) {
-            return $this->arrayVariables;
-        }
-        return [];
+        return $this->arrayVariables;
     }
 
     /**
      * @param $stringPath
      */
     public function variablesForget($stringPath) {
-        if ($this->variablesAllowed($stringPath, 'forget')) {
-            ___::arrayForget($this->arrayVariables, $stringPath);
-        }
+        ___::arrayForget($this->arrayVariables, $stringPath);
     }
 
     /**
@@ -253,17 +237,33 @@ class FiveCode
 
             switch ($stringVariableType) {
                 case 'all':
-                    $mixedResult = $this->variablesAll();
+                    $mixedResult = (
+                        empty($this->arrayVariablesAllowed)
+                        || (
+                            ['*'] === array_keys($this->arrayVariablesAllowed)
+                            && $this->variablesAllowed('*', 'get')
+                        )
+                            ? $this->variablesAll()
+                            : []
+                    );
                     break;
                 case 'get':
-                    $mixedResult = $this->variablesGet($mixedVariableKey, $mixedVariableValueOrDefault);
+                    $mixedResult = (
+                        $this->variablesAllowed($mixedVariableKey, 'get')
+                            ? $this->variablesGet($mixedVariableKey, $mixedVariableValueOrDefault)
+                            : null
+                    );
                     break;
                 case 'set':
-                    $this->variablesSet($mixedVariableKey, $mixedVariableValueOrDefault);
+                    if ($this->variablesAllowed($mixedVariableKey, 'set')) {
+                        $this->variablesSet($mixedVariableKey, $mixedVariableValueOrDefault);
+                    }
                     $mixedResult = $this->variablesGet('return', $mixedResult);
                     break;
                 case 'forget':
-                    $this->variablesForget($mixedVariableKey);
+                    if ($this->variablesAllowed($mixedVariableKey, 'forget')) {
+                        $this->variablesForget($mixedVariableKey);
+                    }
                     $mixedResult = $this->variablesGet('return', $mixedResult);
                     break;
                 default:
@@ -338,7 +338,11 @@ class FiveCode
                                 $mixedArgumentValue = ___::arrayGet($arrayArgument, $stringArgumentKey, null);
                                 switch ($stringArgumentKey) {
                                     case 'variable':
-                                        return $this->variablesGet($mixedArgumentValue, null);
+                                        return (
+                                            $this->variablesAllowed($mixedArgumentValue, 'get')
+                                                ? $this->variablesGet($mixedArgumentValue, null)
+                                                : null
+                                        );
                                     default:
                                         return $mixedArgumentValue;
                                 }
@@ -550,7 +554,11 @@ class FiveCode
                         $mixedArgumentValue = ___::arrayGet($arrayArgument, $stringArgumentKey, null);
                         switch ($stringArgumentKey) {
                             case 'variable':
-                                return $this->variablesGet($mixedArgumentValue, null);
+                                return (
+                                    $this->variablesAllowed($mixedArgumentValue, 'get')
+                                        ? $this->variablesGet($mixedArgumentValue, null)
+                                        : null
+                                );
                             default:
                                 return $mixedArgumentValue;
                         }
@@ -565,7 +573,9 @@ class FiveCode
                     $mixedReturnValue = ___::arrayGet($arrayReturn, $stringReturnKey, null);
                     switch ($stringReturnKey) {
                         case 'variable':
-                            $this->variablesSet($mixedReturnValue, $mixedResult);
+                            if ($this->variablesAllowed($mixedReturnValue, 'set')) {
+                                $this->variablesSet($mixedReturnValue, $mixedResult);
+                            }
                             break;
                     }
                 }
