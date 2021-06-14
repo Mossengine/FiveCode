@@ -3,6 +3,7 @@
 use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\Exceptions\FunctionException;
 use Mossengine\FiveCode\Helpers\___;
+use Mossengine\FiveCode\Parsers\Instructions;
 use Mossengine\FiveCode\Parsers\ModuleAbstract;
 use Mossengine\FiveCode\Parsers\Variables;
 
@@ -270,6 +271,7 @@ class FiveCode
             // Parsers
             ->parsers(array_merge(
                 [
+                    'instructions' => Instructions::class,
                     'variables' => Variables::class
                 ],
                 ___::arrayGet($arrayParameters, 'parsers.default', [])
@@ -305,7 +307,7 @@ class FiveCode
      * @throws FunctionException
      */
     public function evaluate(array $arrayInstructions = []) : self {
-        $this->parseInstructions($arrayInstructions);
+        $this->parse($arrayInstructions);
         return $this;
     }
 
@@ -315,7 +317,8 @@ class FiveCode
      * @throws InstructionException
      * @throws FunctionException
      */
-    public function parseInstructions(array $arrayInstructions = []) {
+    public function parse(array $arrayInstructions = []) {
+        // echo '$arrayInstructions' . json_encode($arrayInstructions) . PHP_EOL;
         $this->intEvaluationsRecursions++;
         $mixedResult = null;
 
@@ -327,12 +330,6 @@ class FiveCode
                 }
                 $mixedEvaluationData = ___::arrayGet($arrayEvaluation, $stringEvaluationType, []);
                 switch ($stringEvaluationType) {
-                    case 'instruction':
-                        $mixedResult = $this->parseInstructions([$mixedEvaluationData]);
-                        break;
-                    case 'instructions':
-                        $mixedResult = $this->parseInstructions($mixedEvaluationData);
-                        break;
                     case 'value':
                         $mixedResult = $this->parseValues([$mixedEvaluationData]);
                         break;
@@ -358,9 +355,7 @@ class FiveCode
                         $mixedResult = $this->parseExecutes($mixedEvaluationData);
                         break;
                     default:
-                        /** @var ModuleAbstract $module */
-                        $parser = $this->parserGet($stringEvaluationType);
-                        if (is_callable($parser)) {
+                        if (is_callable($parser = $this->parserGet($stringEvaluationType))) {
                             $mixedResult = call_user_func_array($parser, [$this, $mixedEvaluationData]);
                         } else {
                             throw new InstructionException('Invalid parser : ' . $stringEvaluationType);
@@ -591,7 +586,7 @@ class FiveCode
                                 )
                             )
                         ) {
-                            $mixedResult = $this->parseInstructions($arrayInstructions);
+                            $mixedResult = $this->parse($arrayInstructions);
                         }
                     }
 
@@ -623,7 +618,7 @@ class FiveCode
                         )
                     )
                 ) {
-                    $mixedResult = $this->parseInstructions($arrayInstructions);
+                    $mixedResult = $this->parse($arrayInstructions);
                 }
             }
         }
