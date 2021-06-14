@@ -4,8 +4,8 @@ use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\Exceptions\FunctionException;
 use Mossengine\FiveCode\Helpers\___;
 use Mossengine\FiveCode\Parsers\Conditions;
+use Mossengine\FiveCode\Parsers\Functions;
 use Mossengine\FiveCode\Parsers\Instructions;
-use Mossengine\FiveCode\Parsers\ModuleAbstract;
 use Mossengine\FiveCode\Parsers\Values;
 use Mossengine\FiveCode\Parsers\Variables;
 
@@ -351,7 +351,8 @@ class FiveCode
                     'instructions' => Instructions::class,
                     'values' => Values::class,
                     'variables' => Variables::class,
-                    'conditions' => Conditions::class
+                    'conditions' => Conditions::class,
+                    'functions' => Functions::class
                 ],
                 ___::arrayGet($arrayParameters, 'parsers.default', [])
             ))
@@ -404,12 +405,6 @@ class FiveCode
                 }
                 $mixedEvaluationData = ___::arrayGet($arrayEvaluation, $stringEvaluationType, []);
                 switch ($stringEvaluationType) {
-                    case 'function':
-                        $this->parseFunctions([$mixedEvaluationData]);
-                        break;
-                    case 'functions':
-                        $this->parseFunctions($mixedEvaluationData);
-                        break;
                     case 'execute':
                         $mixedResult = $this->parseExecutes([$mixedEvaluationData]);
                         break;
@@ -428,35 +423,6 @@ class FiveCode
         $this->loopDown('parse');
         $this->variableSet('return', $mixedResult);
         return $mixedResult;
-    }
-
-    /**
-     * @param array $arrayFunctions
-     * @throws FunctionException
-     */
-    private function parseFunctions(array $arrayFunctions = []) {
-        foreach ($arrayFunctions as $arrayFunction) {
-            $stringFunctionType = ___::arrayFirstKey($arrayFunction);
-            $mixedFunctionData = ___::arrayGet($arrayFunction, $stringFunctionType, null);
-            $mixedFunctionName = ___::arrayGet($mixedFunctionData, 'key', null);
-            $mixedFunctionCallable = ___::arrayGet($mixedFunctionData, 'callable', $mixedFunctionData);
-
-            if (is_null($mixedFunctionName)) {
-                $mixedFunctionName = $stringFunctionType;
-                $stringFunctionType = 'set';
-            }
-
-            switch ($stringFunctionType) {
-                case 'set':
-                    $this->functionSet($mixedFunctionName, $mixedFunctionCallable);
-                    break;
-                case 'forget':
-                    $this->functionForget($mixedFunctionName);
-                    break;
-                default:
-                    throw new FunctionException('Invalid function type : ' . $stringFunctionType);
-            }
-        }
     }
 
     /**
