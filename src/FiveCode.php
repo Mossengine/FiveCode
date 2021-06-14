@@ -3,6 +3,7 @@
 use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\Exceptions\FunctionException;
 use Mossengine\FiveCode\Helpers\___;
+use Mossengine\FiveCode\Parsers\Conditions;
 use Mossengine\FiveCode\Parsers\Instructions;
 use Mossengine\FiveCode\Parsers\ModuleAbstract;
 use Mossengine\FiveCode\Parsers\Values;
@@ -14,6 +15,81 @@ use Mossengine\FiveCode\Parsers\Variables;
  */
 class FiveCode
 {
+
+    /**
+     * @var array
+     */
+    private $arrayLoopTracking = [];
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intAdjustment
+     */
+    public function loopAdjust(string $stringLoopName, int $intAdjustment = 0) {
+        $this->loopSet(
+            $stringLoopName,
+            $this->loopGet($stringLoopName) + $intAdjustment
+        );
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function loopGet(string $stringLoopName, int $intDefault = 0) : int {
+        return ___::arrayGet(
+            $this->arrayLoopTracking,
+            $stringLoopName,
+            $intDefault
+        );
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intAmount
+     */
+    public function loopSet(string $stringLoopName, int $intAmount = 0) {
+        ___::arraySet(
+            $this->arrayLoopTracking,
+            $stringLoopName,
+            $intAmount
+        );
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intUp
+     */
+    public function loopUp(string $stringLoopName, int $intUp = 1) {
+        $this->loopAdjust($stringLoopName, $intUp);
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intUp
+     */
+    public function loopDown(string $stringLoopName, int $intUp = -1) {
+        $this->loopAdjust($stringLoopName, $intUp);
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intAmount
+     * @return bool
+     */
+    public function isLoopOver(string $stringLoopName, int $intAmount = 0) : bool {
+        return $this->loopGet($stringLoopName) > $intAmount;
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intAmount
+     * @return bool
+     */
+    public function isLoopUnder(string $stringLoopName, int $intAmount = 0) : bool {
+        return $this->loopGet($stringLoopName) < $intAmount;
+    }
 
     /**
      * @var array
@@ -274,7 +350,8 @@ class FiveCode
                 [
                     'instructions' => Instructions::class,
                     'values' => Values::class,
-                    'variables' => Variables::class
+                    'variables' => Variables::class,
+                    'conditions' => Conditions::class
                 ],
                 ___::arrayGet($arrayParameters, 'parsers.default', [])
             ))
@@ -298,11 +375,6 @@ class FiveCode
     }
 
     /**
-     * @var int
-     */
-    private $intEvaluationsRecursions = 0;
-
-    /**
      * @param array $arrayInstructions
      * @return $this
      * @throws InstructionException
@@ -321,10 +393,10 @@ class FiveCode
      */
     public function parse(array $arrayInstructions = []) {
         // echo '$arrayInstructions' . json_encode($arrayInstructions) . PHP_EOL;
-        $this->intEvaluationsRecursions++;
+        $this->loopUp('parse');
         $mixedResult = null;
 
-        if ($this->intEvaluationsRecursions < 10) {
+        if ($this->isLoopUnder('parse', 10)) {
             foreach ($arrayInstructions as $arrayEvaluation) {
                 $stringEvaluationType = ___::arrayFirstKey($arrayEvaluation);
                 if (!$this->isParserAllowed($stringEvaluationType)) {
@@ -337,12 +409,6 @@ class FiveCode
                         break;
                     case 'functions':
                         $this->parseFunctions($mixedEvaluationData);
-                        break;
-                    case 'condition':
-                        $mixedResult = $this->parseConditions([$mixedEvaluationData]);
-                        break;
-                    case 'conditions':
-                        $mixedResult = $this->parseConditions($mixedEvaluationData);
                         break;
                     case 'execute':
                         $mixedResult = $this->parseExecutes([$mixedEvaluationData]);
@@ -359,7 +425,7 @@ class FiveCode
                 }
             }
         }
-        $this->intEvaluationsRecursions--;
+        $this->loopDown('parse');
         $this->variableSet('return', $mixedResult);
         return $mixedResult;
     }
@@ -391,222 +457,6 @@ class FiveCode
                     throw new FunctionException('Invalid function type : ' . $stringFunctionType);
             }
         }
-    }
-
-    /**
-     * @var int
-     */
-    private $intConditionsRecursions = 0;
-
-    /**
-     * @param array $arrayConditions
-     * @return bool|null
-     * @throws InstructionException
-     * @throws FunctionException
-     */
-    private function parseConditions(array $arrayConditions = []) {
-        $this->intConditionsRecursions++;
-        $mixedResult = null;
-
-        if ($this->intConditionsRecursions < 10) {
-            foreach ($arrayConditions as $arrayCondition) {
-                $stringConditionType = ___::arrayFirstKey($arrayCondition);
-                $arrayConditionData = ___::arrayGet($arrayCondition, $stringConditionType, null);
-                $arrayStatements = ___::arrayGet($arrayConditionData, 'statements', null);
-
-                foreach ($arrayStatements as $arrayStatement) {
-                    $stringStatementType = ___::arrayFirstKey($arrayStatement);
-                    $arrayStatementData = ___::arrayGet($arrayStatement, $stringStatementType, null);
-
-                    if (in_array($stringStatementType, ['condition', 'conditions'])) {
-                        $mixedResult = $this->parseConditions($arrayStatementData);
-                    } else {
-                        $arrayArguments = array_map(
-                            function (array $arrayArgument) {
-                                $stringArgumentKey = ___::arrayFirstKey($arrayArgument);
-                                $mixedArgumentValue = ___::arrayGet($arrayArgument, $stringArgumentKey, null);
-                                switch ($stringArgumentKey) {
-                                    case 'variable':
-                                        return (
-                                            $this->isVariableAllowed($mixedArgumentValue, 'get')
-                                                ? $this->variableGet($mixedArgumentValue, null)
-                                                : null
-                                        );
-                                    default:
-                                        return $mixedArgumentValue;
-                                }
-                            },
-                            ___::arrayGet($arrayStatementData, 'arguments', [])
-                        );
-
-                        // support more than one argument, middle argument is the operator ( type )
-                        switch (count($arrayArguments)) {
-                            case 1:
-                                $mixedLeft = $arrayArguments[0];
-                                $mixedRight = null;
-                                break;
-                            case 2:
-                                $mixedLeft = $arrayArguments[0];
-                                $mixedRight = $arrayArguments[1];
-                                break;
-                            case 3:
-                                $mixedLeft = $arrayArguments[0];
-                                $stringStatementType = $arrayArguments[1];
-                                $mixedRight = $arrayArguments[2];
-                                break;
-                            default:
-                                $mixedLeft = null;
-                                $mixedRight = null;
-                        }
-
-                        switch ($stringStatementType) {
-                            case 'lt':
-                            case '<':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft < 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft < $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'lte':
-                            case '<=':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft <= 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft <= $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'eq':
-                            case '==':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft == 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft == $mixedRight)
-                                        )
-                                );
-                                break;
-                            case '===':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft === 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft === $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'neq':
-                            case '!=':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft != 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft != $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'gt':
-                            case '>':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft > 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft > $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'gte':
-                            case '>=':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft >= 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft >= $mixedRight)
-                                        )
-                                );
-                                break;
-                            default:
-                                $mixedResult = false;
-                        }
-
-                        if (
-                            (
-                                $mixedResult
-                                && is_array(
-                                    $arrayInstructions = ___::arrayGet($arrayStatementData, 'true', null)
-                                )
-                            )
-                            || (
-                                !$mixedResult
-                                && is_array(
-                                    $arrayInstructions = ___::arrayGet($arrayStatementData, 'false', null)
-                                )
-                            )
-                        ) {
-                            $mixedResult = $this->parse($arrayInstructions);
-                        }
-                    }
-
-                    if (
-                        (
-                            $mixedResult
-                            && 'some' === $stringConditionType
-                        )
-                        || (
-                            !$mixedResult
-                            && 'every' === $stringConditionType
-                        )
-                    ) {
-                        break;
-                    }
-                }
-
-                if (
-                    (
-                        $mixedResult
-                        && is_array(
-                            $arrayInstructions = ___::arrayGet($arrayConditionData, 'true', null)
-                        )
-                    )
-                    || (
-                        !$mixedResult
-                        && is_array(
-                            $arrayInstructions = ___::arrayGet($arrayConditionData, 'false', null)
-                        )
-                    )
-                ) {
-                    $mixedResult = $this->parse($arrayInstructions);
-                }
-            }
-        }
-        $this->intConditionsRecursions--;
-        $this->variableSet('return', $mixedResult);
-        return $mixedResult;
     }
 
     /**
