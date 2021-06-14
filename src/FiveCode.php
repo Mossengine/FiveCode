@@ -5,6 +5,7 @@ use Mossengine\FiveCode\Exceptions\FunctionException;
 use Mossengine\FiveCode\Helpers\___;
 use Mossengine\FiveCode\Parsers\Instructions;
 use Mossengine\FiveCode\Parsers\ModuleAbstract;
+use Mossengine\FiveCode\Parsers\Values;
 use Mossengine\FiveCode\Parsers\Variables;
 
 /**
@@ -272,6 +273,7 @@ class FiveCode
             ->parsers(array_merge(
                 [
                     'instructions' => Instructions::class,
+                    'values' => Values::class,
                     'variables' => Variables::class
                 ],
                 ___::arrayGet($arrayParameters, 'parsers.default', [])
@@ -330,12 +332,6 @@ class FiveCode
                 }
                 $mixedEvaluationData = ___::arrayGet($arrayEvaluation, $stringEvaluationType, []);
                 switch ($stringEvaluationType) {
-                    case 'value':
-                        $mixedResult = $this->parseValues([$mixedEvaluationData]);
-                        break;
-                    case 'values':
-                        $mixedResult = $this->parseValues($mixedEvaluationData);
-                        break;
                     case 'function':
                         $this->parseFunctions([$mixedEvaluationData]);
                         break;
@@ -365,20 +361,6 @@ class FiveCode
         }
         $this->intEvaluationsRecursions--;
         $this->variableSet('return', $mixedResult);
-        return $mixedResult;
-    }
-
-    /**
-     * @param array $arrayValues
-     * @return null
-     */
-    public function parseValues(array $arrayValues = []) {
-        $mixedResult = null;
-
-        foreach ($arrayValues as $mixedValue) {
-            $this->variableSet('return', ($mixedResult = $mixedValue));
-        }
-
         return $mixedResult;
     }
 
