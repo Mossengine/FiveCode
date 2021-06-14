@@ -34,193 +34,116 @@ class Conditions extends ModuleAbstract {
 
         if ($fiveCode->isLoopUnder('conditions', 10)) {
             foreach ($arrayConditions as $arrayCondition) {
-                $stringConditionType = ___::arrayFirstKey($arrayCondition);
-                $arrayConditionData = ___::arrayGet($arrayCondition, $stringConditionType, null);
-                $arrayStatements = ___::arrayGet($arrayConditionData, 'statements', null);
 
+                // any | all
+                $stringConditionType = ___::arrayFirstKey($arrayCondition);
+
+                // array of statements ( things that resolve to true )
+                $arrayStatements = ___::arrayGet($arrayCondition, $stringConditionType, null);
+
+                // Loop over the statements
                 foreach ($arrayStatements as $arrayStatement) {
+                    // Statement type ( operators or more conditions )
                     $stringStatementType = ___::arrayFirstKey($arrayStatement);
+
+                    // Statement data for arguments and results instructions
                     $arrayStatementData = ___::arrayGet($arrayStatement, $stringStatementType, null);
 
-                    if (in_array($stringStatementType, ['condition', 'conditions'])) {
-                        $mixedResult = self::parse($fiveCode, $arrayStatementData);
-                    } else {
-                        $arrayArguments = array_map(
-                            function (array $arrayArgument) {
-                                $stringArgumentKey = ___::arrayFirstKey($arrayArgument);
-                                $mixedArgumentValue = ___::arrayGet($arrayArgument, $stringArgumentKey, null);
-                                switch ($stringArgumentKey) {
-                                    case 'variable':
-                                        return (
-                                            $this->isVariableAllowed($mixedArgumentValue, 'get')
-                                                ? $this->variableGet($mixedArgumentValue, null)
-                                                : null
-                                        );
-                                    default:
-                                        return $mixedArgumentValue;
-                                }
-                            },
-                            ___::arrayGet($arrayStatementData, 'arguments', [])
-                        );
+                    // what type, more conditions?? or operators??
+                    switch ($stringStatementType) {
+                        case 'condition':
+                            $mixedResult = self::parse($fiveCode, [$arrayStatementData]);
+                            break;
+                        case 'conditions':
+                            $mixedResult = self::parse($fiveCode, $arrayStatementData);
+                            break;
+                        default:
+                            // Get the arguments
+                            $arrayArguments = array_map(
+                                function (array $arrayArgument) {
+                                    $stringArgumentKey = ___::arrayFirstKey($arrayArgument);
+                                    $mixedArgumentValue = ___::arrayGet($arrayArgument, $stringArgumentKey, null);
+                                    switch ($stringArgumentKey) {
+                                        case 'variable':
+                                            return (
+                                                $this->isVariableAllowed($mixedArgumentValue, 'get')
+                                                    ? $this->variableGet($mixedArgumentValue, null)
+                                                    : null
+                                            );
+                                        default:
+                                            return $mixedArgumentValue;
+                                    }
+                                },
+                                ___::arrayGet($arrayStatementData, 'arguments', [])
+                            );
 
-                        // support more than one argument, middle argument is the operator ( type )
-                        switch (count($arrayArguments)) {
-                            case 1:
-                                $mixedLeft = $arrayArguments[0];
-                                $mixedRight = null;
-                                break;
-                            case 2:
-                                $mixedLeft = $arrayArguments[0];
-                                $mixedRight = $arrayArguments[1];
-                                break;
-                            case 3:
-                                $mixedLeft = $arrayArguments[0];
-                                $stringStatementType = $arrayArguments[1];
-                                $mixedRight = $arrayArguments[2];
-                                break;
-                            default:
-                                $mixedLeft = null;
-                                $mixedRight = null;
-                        }
-
-                        switch ($stringStatementType) {
-                            case 'lt':
-                            case '<':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft < 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft < $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'lte':
-                            case '<=':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft <= 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft <= $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'eq':
-                            case '==':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft == 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft == $mixedRight)
-                                        )
-                                );
-                                break;
-                            case '===':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft === 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft === $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'neq':
-                            case '!=':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft != 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft != $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'gt':
-                            case '>':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft > 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft > $mixedRight)
-                                        )
-                                );
-                                break;
-                            case 'gte':
-                            case '>=':
-                                $mixedResult = (
-                                    is_numeric($mixedLeft)
-                                    && is_null($mixedRight)
-                                        ? ($mixedLeft >= 0)
-                                        : (
-                                            is_numeric($mixedLeft)
-                                            && is_numeric($mixedRight)
-                                            && ($mixedLeft >= $mixedRight)
-                                        )
-                                );
-                                break;
-                            default:
-                                $mixedResult = false;
-                        }
-
-                        if (
-                            (
-                                $mixedResult
-                                && is_array(
-                                    $arrayInstructions = ___::arrayGet($arrayStatementData, 'true', null)
-                                )
-                            )
-                            || (
-                                !$mixedResult
-                                && is_array(
-                                    $arrayInstructions = ___::arrayGet($arrayStatementData, 'false', null)
-                                )
-                            )
-                        ) {
-                            $mixedResult = $fiveCode->parse($arrayInstructions);
-                        }
+                            // support more than one argument, middle argument is the operator ( type )
+                            switch (count($arrayArguments)) {
+                                case 1:
+                                    $mixedLeft = $arrayArguments[0];
+                                    $mixedRight = null;
+                                    break;
+                                case 2:
+                                    $mixedLeft = $arrayArguments[0];
+                                    $mixedRight = $arrayArguments[1];
+                                    break;
+                                case 3:
+                                    $mixedLeft = $arrayArguments[0];
+                                    $stringStatementType = $arrayArguments[1];
+                                    $mixedRight = $arrayArguments[2];
+                                    break;
+                                default:
+                                    $mixedLeft = null;
+                                    $mixedRight = null;
+                            }
+                            $mixedResult = ___::is($mixedLeft, $stringStatementType, $mixedRight);
                     }
 
+                    // Statement specific instructions???
+                    if (
+                        (
+                            true === $mixedResult
+                            && is_array(
+                                $arrayInstructions = ___::arrayGet($arrayStatementData, 'true', null)
+                            )
+                        )
+                        || (
+                            true !== $mixedResult
+                            && is_array(
+                                $arrayInstructions = ___::arrayGet($arrayStatementData, 'false', null)
+                            )
+                        )
+                    ) {
+                        $mixedResult = $fiveCode->parse($arrayInstructions);
+                    }
+
+                    // break when any | all did not get what's expected
                     if (
                         (
                             $mixedResult
-                            && 'some' === $stringConditionType
+                            && 'any' === $stringConditionType
                         )
                         || (
                             !$mixedResult
-                            && 'every' === $stringConditionType
+                            && 'all' === $stringConditionType
                         )
                     ) {
                         break;
                     }
                 }
 
+                // If we have the results we expected based on type then do we have more instructions??
                 if (
                     (
-                        $mixedResult
+                        true === $mixedResult
                         && is_array(
-                            $arrayInstructions = ___::arrayGet($arrayConditionData, 'true', null)
+                            $arrayInstructions = ___::arrayGet($arrayCondition, 'true', null)
                         )
                     )
                     || (
-                        !$mixedResult
+                        true !== $mixedResult
                         && is_array(
-                            $arrayInstructions = ___::arrayGet($arrayConditionData, 'false', null)
+                            $arrayInstructions = ___::arrayGet($arrayCondition, 'false', null)
                         )
                     )
                 ) {

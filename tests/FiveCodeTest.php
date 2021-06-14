@@ -357,21 +357,19 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                     ['value' => 'a'],
                     ['value' => 'b'],
                     ['condition' => [
-                        'every' => [
-                            'statements' => [
-                                ['==' => [
-                                    'arguments' => [
-                                        ['value' => 5],
-                                        ['value' => 5]
-                                    ],
-                                    'true' => [
-                                        ['value' => 'yes']
-                                    ],
-                                    'false' => [
-                                        ['value' => 'no']
-                                    ]
-                                ]]
-                            ]
+                        'all' => [
+                            ['==' => [
+                                'arguments' => [
+                                    ['value' => 5],
+                                    ['value' => 5]
+                                ]
+                            ]]
+                        ],
+                        'true' => [
+                            ['value' => 'yes']
+                        ],
+                        'false' => [
+                            ['value' => 'no']
                         ]
                     ]]
                 ])
@@ -683,15 +681,13 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make()
                 ->evaluate([
                     ['condition' => [
-                        'every' => [
-                            'statements' => [
-                                ['==' => [
-                                    'arguments' => [
-                                        ['value' => 5],
-                                        ['value' => 5]
-                                    ]
-                                ]]
-                            ]
+                        'all' => [
+                            ['==' => [
+                                'arguments' => [
+                                    ['value' => 5],
+                                    ['value' => 5]
+                                ]
+                            ]]
                         ]
                     ]],
                 ])
@@ -702,15 +698,13 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make()
                 ->evaluate([
                     ['condition' => [
-                        'every' => [
-                            'statements' => [
-                                ['==' => [
-                                    'arguments' => [
-                                        ['value' => 4],
-                                        ['value' => 5]
-                                    ]
-                                ]]
-                            ]
+                        'all' => [
+                            ['==' => [
+                                'arguments' => [
+                                    ['value' => 4],
+                                    ['value' => 5]
+                                ]
+                            ]]
                         ]
                     ]],
                 ])
@@ -725,25 +719,23 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make()
                 ->evaluate([
                     ['condition' => [
-                        'every' => [
-                            'statements' => [
-                                ['==' => [
-                                    'arguments' => [
-                                        ['value' => 5],
-                                        ['value' => 5]
-                                    ],
-                                    'true' => [
-                                        ['variable' => [
-                                            'set' => ['return' => 'success']
-                                        ]]
-                                    ]
-                                ]]
-                            ],
-                            'true' => [
-                                ['variable' => [
-                                    'get' => ['return' => 'failure']
-                                ]]
-                            ]
+                        'all' => [
+                            ['==' => [
+                                'arguments' => [
+                                    ['value' => 5],
+                                    ['value' => 5]
+                                ],
+                                'true' => [
+                                    ['variable' => [
+                                        'set' => ['return' => 'success']
+                                    ]]
+                                ]
+                            ]]
+                        ],
+                        'true' => [
+                            ['variable' => [
+                                'get' => ['return' => 'failure']
+                            ]]
                         ]
                     ]],
                 ])
@@ -755,35 +747,117 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make()
                 ->evaluate([
                     ['condition' => [
-                        'every' => [
-                            'statements' => [
-                                ['!=' => [
-                                    'arguments' => [
-                                        ['value' => 5],
-                                        ['value' => 5]
-                                    ],
-                                    'true' => [
-                                        ['variable' => [
-                                            'set' => ['return' => 'success']
-                                        ]]
-                                    ],
-                                    'false' => [
-                                        ['variable' => [
-                                            'set' => ['return' => 'failure']
-                                        ]]
-                                    ]
-                                ]]
-                            ],
-                            'false' => [
-                                ['variable' => [
-                                    'get' => ['return' => 'success']
-                                ]]
-                            ]
+                        'all' => [
+                            ['!=' => [
+                                'arguments' => [
+                                    ['value' => 5],
+                                    ['value' => 5]
+                                ],
+                                'true' => [
+                                    ['variable' => [
+                                        'set' => ['return' => 'success']
+                                    ]]
+                                ],
+                                'false' => [
+                                    ['variable' => [
+                                        'set' => ['return' => 'failure']
+                                    ]]
+                                ]
+                            ]]
+                        ],
+                        'false' => [
+                            ['variable' => [
+                                'get' => ['return' => 'success']
+                            ]]
                         ]
                     ]],
                 ])
                 ->return(),
             'The return from the evaluate should be failure based on the condition not being true and triggering the false to set return variable to failure'
+        );
+    }
+
+    public function testIfItCanConditionWithConditions() {
+        $this->assertTrue(
+            Mossengine\FiveCode\FiveCode::make()
+                ->evaluate([
+                    ['condition' => [
+                        'all' => [
+                            ['==' => [
+                                'arguments' => [
+                                    ['value' => 5],
+                                    ['value' => '5']
+                                ]
+                            ]],
+                            ['===' => [
+                                'arguments' => [
+                                    ['value' => 1],
+                                    ['value' => 1]
+                                ]
+                            ]],
+                            ['!=' => [
+                                'arguments' => [
+                                    ['value' => 1],
+                                    ['value' => '2']
+                                ]
+                            ]],
+                            ['!==' => [
+                                'arguments' => [
+                                    ['value' => 1],
+                                    ['value' => 2]
+                                ]
+                            ]],
+                            ['>' => [
+                                'arguments' => [
+                                    ['value' => 2],
+                                    ['value' => 1]
+                                ]
+                            ]],
+                            ['>=' => [
+                                'arguments' => [
+                                    ['value' => 1],
+                                    ['value' => 1]
+                                ]
+                            ]],
+                            ['<' => [
+                                'arguments' => [
+                                    ['value' => 1],
+                                    ['value' => 2]
+                                ]
+                            ]],
+                            ['<=' => [
+                                'arguments' => [
+                                    ['value' => 1],
+                                    ['value' => 1]
+                                ]
+                            ]],
+                            ['condition' => [
+                                'any' => [
+                                    ['===' => [
+                                        'arguments' => [
+                                            ['value' => 5],
+                                            ['value' => 4]
+                                        ]
+                                    ]],
+                                    ['>' => [
+                                        'arguments' => [
+                                            ['value' => 1],
+                                            ['value' => 2]
+                                        ]
+                                    ]],
+                                    ['<' => [
+                                        'arguments' => [
+                                            ['value' => 1],
+                                            ['value' => 2]
+                                        ]
+                                    ]]
+                                ]
+                            ]]
+                        ]
+                    ]],
+                ])
+                ->return(),
+            'The return from the evaluate should be true based on the conditions being met for all expected'
         );
     }
 

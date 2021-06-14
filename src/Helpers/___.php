@@ -117,4 +117,112 @@ class ___ {
         return empty($array) ? $mixedDefault : reset($array);
     }
 
+    /**
+     * @param $mixedLeft
+     * @param string $operator
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function is($mixedLeft, string $operator, $mixedRight) : bool {
+        return call_user_func_array(
+            [
+                self::class,
+                self::arrayGet(
+                    [
+                        '==' => 'isLike',
+                        '===' => 'isSame',
+                        '!=' => 'isNotLike',
+                        '!==' => 'isDiff',
+                        '>' => 'isMore',
+                        '>=' => 'isMoreOrSame',
+                        '<' => 'isLess',
+                        '<=' => 'isLessOrSame'
+                    ],
+                    $operator,
+                    'isAlwaysFalse'
+                )
+            ],
+            [$mixedLeft, $mixedRight]
+        );
+    }
+
+    /**
+     * @return false
+     */
+    public static function isAlwaysFalse() : bool {
+        return false;
+    }
+
+    /**
+     * @param $mixedLeft
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function isLike($mixedLeft, $mixedRight) : bool {
+        return ($mixedLeft == $mixedRight);
+    }
+
+    /**
+     * @param $mixedLeft
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function isSame($mixedLeft, $mixedRight) : bool {
+        return ($mixedLeft === $mixedRight);
+    }
+
+    /**
+     * @param $mixedLeft
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function isNotLike($mixedLeft, $mixedRight) : bool {
+        return ($mixedLeft != $mixedRight);
+    }
+
+    /**
+     * @param $mixedLeft
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function isDiff($mixedLeft, $mixedRight) : bool {
+        return ($mixedLeft !== $mixedRight);
+    }
+
+    /**
+     * @param $mixedLeft
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function isMore($mixedLeft, $mixedRight) : bool {
+        return ($mixedLeft > $mixedRight);
+    }
+
+    /**
+     * @param $mixedLeft
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function isMoreOrSame($mixedLeft, $mixedRight) : bool {
+        return ($mixedLeft >= $mixedRight);
+    }
+
+    /**
+     * @param $mixedLeft
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function isLess($mixedLeft, $mixedRight) : bool {
+        return ($mixedLeft < $mixedRight);
+    }
+
+    /**
+     * @param $mixedLeft
+     * @param $mixedRight
+     * @return bool
+     */
+    public static function isLessOrSame($mixedLeft, $mixedRight) : bool {
+        return ($mixedLeft <= $mixedRight);
+    }
+
 }
