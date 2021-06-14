@@ -1,8 +1,10 @@
 <?php namespace Mossengine\FiveCode;
 
-use Mossengine\FiveCode\Exceptions\EvaluationException;
+use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\Exceptions\FunctionException;
 use Mossengine\FiveCode\Helpers\___;
+use Mossengine\FiveCode\Parsers\ModuleAbstract;
+use Mossengine\FiveCode\Parsers\Variables;
 
 /**
  * Class FiveCode
@@ -70,14 +72,14 @@ class FiveCode
     }
 
     /**
-     * @param $stringName
+     * @param $stringFunctionName
      * @return bool
      */
-    public function isFunctionAllowed($stringName) : bool {
+    public function isFunctionAllowed($stringFunctionName) : bool {
         return true === (
             ___::arrayGet(
                 $this->arrayFunctionsAllowed,
-                $stringName,
+                $stringFunctionName,
                 ___::arrayGet(
                     $this->arrayFunctionsAllowed,
                     '*',
@@ -175,12 +177,110 @@ class FiveCode
     }
 
     /**
+     * @var array
+     */
+    private $arrayParsers = [];
+
+    /**
+     * @param array $stringParserNamespaces
+     * @return $this
+     */
+    public function parsers(array $stringParserNamespaces = []) : self {
+        foreach ($stringParserNamespaces as $stringParserNamespace) {
+            $this->parserAdd($stringParserNamespace);
+        }
+        return $this;
+    }
+
+    /**
+     * @param $stringParserNamespace
+     */
+    public function parserAdd($stringParserNamespace) {
+        foreach ($stringParserNamespace::register() as $stringKey => $callable) {
+            $this->parserSet($stringKey, $callable);
+        }
+    }
+
+    /**
+     * @param $stringKey
+     * @param $callable
+     */
+    public function parserSet($stringKey, $callable) {
+        if (is_callable($callable)) {
+            ___::arraySet($this->arrayParsers, $stringKey, $callable);
+        }
+    }
+
+    /**
+     * @param $stringKey
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function parserGet($stringKey) {
+        return ___::arrayGet($this->arrayParsers, $stringKey, null);
+    }
+
+    /**
+     * @param $stringKey
+     */
+    public function parserForget($stringKey) {
+        ___::arrayForget($this->arrayParsers, $stringKey);
+    }
+
+    /**
+     * @var null
+     */
+    private $arrayParsersAllowed = [];
+
+    /**
+     * @param array|null $arrayParsersAllowed
+     * @return $this|array|null
+     */
+    public function parsersAllowed(array $arrayParsersAllowed = null) {
+        if (is_null($arrayParsersAllowed)) {
+            return $this->arrayParsersAllowed;
+        }
+        $this->arrayParsersAllowed = $arrayParsersAllowed;
+        return $this;
+    }
+
+    /**
+     * @param string $stringParserName
+     * @return bool
+     */
+    public function isParserAllowed(string $stringParserName) : bool {
+        return true === (
+            ___::arrayGet(
+                $this->arrayParsersAllowed,
+                $stringParserName,
+                ___::arrayGet(
+                    $this->arrayParsersAllowed,
+                    '*',
+                    true
+                )
+            )
+        );
+    }
+
+    /**
      * FiveCode constructor.
      * @param array $arrayParameters
      */
     public function __construct(array $arrayParameters = []) {
-        $this->functions(___::arrayGet($arrayParameters, 'functions.default', []))
+        $this
+            // Parsers
+            ->parsers(array_merge(
+                [
+                    'variables' => Variables::class
+                ],
+                ___::arrayGet($arrayParameters, 'parsers.default', [])
+            ))
+            ->parsersAllowed(___::arrayGet($arrayParameters, 'parsers.allowed', []))
+
+            // Functions
+            ->functions(___::arrayGet($arrayParameters, 'functions.default', []))
             ->functionsAllowed(___::arrayGet($arrayParameters, 'functions.allowed', []))
+
+            // Variables
             ->variables(___::arrayGet($arrayParameters, 'variables.default', []))
             ->variablesAllowed(___::arrayGet($arrayParameters, 'variables.allowed', []));
     }
@@ -201,7 +301,7 @@ class FiveCode
     /**
      * @param array $arrayInstructions
      * @return $this
-     * @throws EvaluationException
+     * @throws InstructionException
      * @throws FunctionException
      */
     public function evaluate(array $arrayInstructions = []) : self {
@@ -212,7 +312,7 @@ class FiveCode
     /**
      * @param array $arrayInstructions
      * @return bool|mixed|FiveCode|null
-     * @throws EvaluationException
+     * @throws InstructionException
      * @throws FunctionException
      */
     public function parseInstructions(array $arrayInstructions = []) {
@@ -222,6 +322,9 @@ class FiveCode
         if ($this->intEvaluationsRecursions < 10) {
             foreach ($arrayInstructions as $arrayEvaluation) {
                 $stringEvaluationType = ___::arrayFirstKey($arrayEvaluation);
+                if (!$this->isParserAllowed($stringEvaluationType)) {
+                    throw new InstructionException('Disabled parser : ' . $stringEvaluationType);
+                }
                 $mixedEvaluationData = ___::arrayGet($arrayEvaluation, $stringEvaluationType, []);
                 switch ($stringEvaluationType) {
                     case 'instruction':
@@ -229,12 +332,6 @@ class FiveCode
                         break;
                     case 'instructions':
                         $mixedResult = $this->parseInstructions($mixedEvaluationData);
-                        break;
-                    case 'variable':
-                        $mixedResult = $this->parseVariables([$mixedEvaluationData]);
-                        break;
-                    case 'variables':
-                        $mixedResult = $this->parseVariables($mixedEvaluationData);
                         break;
                     case 'value':
                         $mixedResult = $this->parseValues([$mixedEvaluationData]);
@@ -261,65 +358,17 @@ class FiveCode
                         $mixedResult = $this->parseExecutes($mixedEvaluationData);
                         break;
                     default:
-                        throw new EvaluationException('Invalid evaluation key : ' . $stringEvaluationType);
+                        /** @var ModuleAbstract $module */
+                        $parser = $this->parserGet($stringEvaluationType);
+                        if (is_callable($parser)) {
+                            $mixedResult = call_user_func_array($parser, [$this, $mixedEvaluationData]);
+                        } else {
+                            throw new InstructionException('Invalid parser : ' . $stringEvaluationType);
+                        }
                 }
             }
         }
         $this->intEvaluationsRecursions--;
-        $this->variableSet('return', $mixedResult);
-        return $mixedResult;
-    }
-
-    /**
-     * @param array $arrayVariables
-     * @return array|\ArrayAccess|mixed|null
-     * @throws EvaluationException
-     */
-    public function parseVariables(array $arrayVariables = []) {
-        $mixedResult = null;
-
-        foreach ($arrayVariables as $arrayVariable) {
-            $stringVariableType = ___::arrayFirstKey($arrayVariable);
-            $mixedVariableData = ___::arrayGet($arrayVariable, $stringVariableType, null);
-            $mixedVariableKey = ___::arrayGet($mixedVariableData, 'key', ___::arrayFirstKey($mixedVariableData));
-            $mixedVariableValueOrDefault = ___::arrayGet($mixedVariableData, 'value', ___::arrayFirstValue($mixedVariableData));
-
-            switch ($stringVariableType) {
-                case 'all':
-                    $mixedResult = (
-                        empty($this->arrayVariablesAllowed)
-                        || (
-                            ['*'] === array_keys($this->arrayVariablesAllowed)
-                            && $this->isVariableAllowed('*', 'get')
-                        )
-                            ? $this->variables()
-                            : []
-                    );
-                    break;
-                case 'get':
-                    $mixedResult = (
-                        $this->isVariableAllowed($mixedVariableKey, 'get')
-                            ? $this->variableGet($mixedVariableKey, $mixedVariableValueOrDefault)
-                            : null
-                    );
-                    break;
-                case 'set':
-                    if ($this->isVariableAllowed($mixedVariableKey, 'set')) {
-                        $this->variableSet($mixedVariableKey, $mixedVariableValueOrDefault);
-                    }
-                    $mixedResult = $this->variableGet('return', $mixedResult);
-                    break;
-                case 'forget':
-                    if ($this->isVariableAllowed($mixedVariableKey, 'forget')) {
-                        $this->variableForget($mixedVariableKey);
-                    }
-                    $mixedResult = $this->variableGet('return', $mixedResult);
-                    break;
-                default:
-                    throw new EvaluationException('Invalid variable type : ' . $stringVariableType);
-            }
-        }
-
         $this->variableSet('return', $mixedResult);
         return $mixedResult;
     }
@@ -375,7 +424,7 @@ class FiveCode
     /**
      * @param array $arrayConditions
      * @return bool|null
-     * @throws EvaluationException
+     * @throws InstructionException
      * @throws FunctionException
      */
     private function parseConditions(array $arrayConditions = []) {
