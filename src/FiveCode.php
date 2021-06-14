@@ -4,6 +4,7 @@ use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\Exceptions\FunctionException;
 use Mossengine\FiveCode\Helpers\___;
 use Mossengine\FiveCode\Parsers\Conditions;
+use Mossengine\FiveCode\Parsers\Executes;
 use Mossengine\FiveCode\Parsers\Functions;
 use Mossengine\FiveCode\Parsers\Instructions;
 use Mossengine\FiveCode\Parsers\Values;
@@ -352,7 +353,8 @@ class FiveCode
                     'values' => Values::class,
                     'variables' => Variables::class,
                     'conditions' => Conditions::class,
-                    'functions' => Functions::class
+                    'functions' => Functions::class,
+                    'executes' => Executes::class
                 ],
                 ___::arrayGet($arrayParameters, 'parsers.default', [])
             ))
@@ -379,7 +381,6 @@ class FiveCode
      * @param array $arrayInstructions
      * @return $this
      * @throws InstructionException
-     * @throws FunctionException
      */
     public function evaluate(array $arrayInstructions = []) : self {
         $this->parse($arrayInstructions);
@@ -388,106 +389,31 @@ class FiveCode
 
     /**
      * @param array $arrayInstructions
-     * @return bool|mixed|FiveCode|null
+     * @return false|mixed|null
      * @throws InstructionException
-     * @throws FunctionException
      */
     public function parse(array $arrayInstructions = []) {
-        // echo '$arrayInstructions' . json_encode($arrayInstructions) . PHP_EOL;
         $this->loopUp('parse');
         $mixedResult = null;
-
         if ($this->isLoopUnder('parse', 10)) {
             foreach ($arrayInstructions as $arrayEvaluation) {
                 $stringEvaluationType = ___::arrayFirstKey($arrayEvaluation);
                 if (!$this->isParserAllowed($stringEvaluationType)) {
                     throw new InstructionException('Disabled parser : ' . $stringEvaluationType);
                 }
-                $mixedEvaluationData = ___::arrayGet($arrayEvaluation, $stringEvaluationType, []);
-                switch ($stringEvaluationType) {
-                    case 'execute':
-                        $mixedResult = $this->parseExecutes([$mixedEvaluationData]);
-                        break;
-                    case 'executes':
-                        $mixedResult = $this->parseExecutes($mixedEvaluationData);
-                        break;
-                    default:
-                        if (is_callable($parser = $this->parserGet($stringEvaluationType))) {
-                            $mixedResult = call_user_func_array($parser, [$this, $mixedEvaluationData]);
-                        } else {
-                            throw new InstructionException('Invalid parser : ' . $stringEvaluationType);
-                        }
+                if (!is_callable($parser = $this->parserGet($stringEvaluationType))) {
+                    throw new InstructionException('Invalid parser : ' . $stringEvaluationType);
                 }
+                $mixedResult = call_user_func_array(
+                    $parser,
+                    [
+                        $this,
+                        ___::arrayGet($arrayEvaluation, $stringEvaluationType, [])
+                    ]
+                );
             }
         }
         $this->loopDown('parse');
-        $this->variableSet('return', $mixedResult);
-        return $mixedResult;
-    }
-
-    /**
-     * @param array $arrayExecutes
-     * @return false|mixed|null
-     */
-    private function parseExecutes(array $arrayExecutes = []) {
-        $mixedResult = null;
-        foreach ($arrayExecutes as $arrayExecute) {
-            $stringFunctionName = ___::arrayFirstKey($arrayExecute);
-            $mixedFunctionData = ___::arrayGet($arrayExecute, $stringFunctionName, null);
-
-            $callable = $this->functionGet($stringFunctionName, null);
-
-//            echo 'FUNC: ' . $stringFunctionName . PHP_EOL;
-//            echo 'CALLABLE: ' . (is_callable($callable) ? 'yes' : 'no') . PHP_EOL;
-//            echo 'ALLOWED: ' . ($this->functionsAllowed($stringFunctionName) ? 'yes' : 'no') . PHP_EOL;
-//            echo 'EXISTS: ' . (function_exists($stringFunctionName) ? 'yes' : 'no') . PHP_EOL;
-
-            $mixedResult = call_user_func_array(
-                (
-                    is_callable($callable)
-                        ? $callable
-                        : (
-                            $this->isFunctionAllowed($stringFunctionName)
-                            && function_exists($stringFunctionName)
-                                ? $stringFunctionName
-                                : function() { return null; }
-                        )
-                ),
-                array_map(
-                    function (array $arrayArgument) {
-                        $stringArgumentKey = ___::arrayFirstKey($arrayArgument);
-                        $mixedArgumentValue = ___::arrayGet($arrayArgument, $stringArgumentKey, null);
-                        switch ($stringArgumentKey) {
-                            case 'variable':
-                                return (
-                                    $this->isVariableAllowed($mixedArgumentValue, 'get')
-                                        ? $this->variableGet($mixedArgumentValue, null)
-                                        : null
-                                );
-                            default:
-                                return $mixedArgumentValue;
-                        }
-                    },
-                    ___::arrayGet($mixedFunctionData, 'arguments', [])
-                )
-            );
-
-            if (!empty($mixedResult)) {
-                foreach (___::arrayGet($mixedFunctionData, 'returns', []) as $arrayReturn) {
-                    $stringReturnKey = ___::arrayFirstKey($arrayReturn);
-                    $mixedReturnValue = ___::arrayGet($arrayReturn, $stringReturnKey, null);
-                    switch ($stringReturnKey) {
-                        case 'variable':
-                            if ($this->isVariableAllowed($mixedReturnValue, 'set')) {
-                                $this->variableSet($mixedReturnValue, $mixedResult);
-                            }
-                            break;
-                    }
-                }
-            }
-
-        }
-
         $this->variableSet('return', $mixedResult);
         return $mixedResult;
     }
