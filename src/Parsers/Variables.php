@@ -33,7 +33,28 @@ class Variables extends ModuleAbstract {
             $stringVariableType = ___::arrayFirstKey($arrayVariable);
             $mixedVariableData = ___::arrayGet($arrayVariable, $stringVariableType, []);
             $mixedVariableKey = ___::arrayGet($mixedVariableData, 'key', ___::arrayFirstKey($mixedVariableData));
-            $mixedVariableValueOrDefault = ___::arrayGet($mixedVariableData, 'value', ___::arrayFirstValue($mixedVariableData));
+            $mixedVariableValueOrDefault = (
+                !is_null(
+                    $stringVariable = ___::arrayGet(
+                        $mixedVariableData,
+                        'variable',
+                        null
+                    )
+                )
+                && is_string($stringVariable)
+                    ? (
+                        $fiveCode->isVariableAllowed($stringVariable, 'get')
+                            ? $fiveCode->variableGet($stringVariable, null)
+                            : []
+                    )
+                    : (
+                        ___::arrayGet(
+                            $mixedVariableData,
+                            'value',
+                            ___::arrayFirstValue($mixedVariableData)
+                        )
+                    )
+            );
 
             switch ($stringVariableType) {
                 case 'all':

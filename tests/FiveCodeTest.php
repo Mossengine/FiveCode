@@ -399,6 +399,27 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             $fiveCode->variableGet('a', 6),
             'The value at key a should not exist and the default value of 9 should be returned.'
         );
+
+        $fiveCode->variableSet('m', 'M');
+        $this->assertEquals(
+            'M',
+            $fiveCode
+                ->evaluate([
+                    ['variables' => [
+                        [
+                            'set' => [
+                                'key' => 'n',
+                                'variable' => 'm'
+                            ]
+                        ],
+                        [
+                            'get' => ['n' => 'Z']
+                        ]
+                    ]]
+                ])
+                ->return(),
+            'The value at key n should be M'
+        );
     }
 
     public function testIfItCanSetGetAndForgetFunctions() {
@@ -860,5 +881,50 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             'The return from the evaluate should be true based on the conditions being met for all expected'
         );
     }
+    /*
+    public function testIfItCanIterator() {
+        $this->assertEquals(
+            [
+                0 => 'a0',
+                1 => 'a1',
+                2 => 'a2',
 
+            ],
+            Mossengine\FiveCode\FiveCode::make([
+                'functions' => [
+                    'allowed' => [
+                        'implode' => true
+                    ]
+                ]
+            ])
+                ->evaluate([
+                    'iterator' => [
+                        'for' => [
+                            'start' => 0,
+                            'limit' => 2,
+                            'step' => 1,
+                            'instructions' => [
+                                [
+                                    'execute' => [
+                                        'implode' => [
+                                            'arguments' => [
+                                                ['value' => '']
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                [
+                                    'variable' => [
+                                        'set'
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ])
+                ->return(),
+            ''
+        );
+    }
+    */
 }

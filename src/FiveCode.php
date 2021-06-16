@@ -1,12 +1,12 @@
 <?php namespace Mossengine\FiveCode;
 
 use Mossengine\FiveCode\Exceptions\InstructionException;
-use Mossengine\FiveCode\Exceptions\FunctionException;
 use Mossengine\FiveCode\Helpers\___;
 use Mossengine\FiveCode\Parsers\Conditions;
 use Mossengine\FiveCode\Parsers\Executes;
 use Mossengine\FiveCode\Parsers\Functions;
 use Mossengine\FiveCode\Parsers\Instructions;
+use Mossengine\FiveCode\Parsers\Iterators;
 use Mossengine\FiveCode\Parsers\Values;
 use Mossengine\FiveCode\Parsers\Variables;
 
@@ -354,7 +354,8 @@ class FiveCode
                     'variables' => Variables::class,
                     'conditions' => Conditions::class,
                     'functions' => Functions::class,
-                    'executes' => Executes::class
+                    'executes' => Executes::class,
+                    'iterators' => Iterators::class
                 ],
                 ___::arrayGet($arrayParameters, 'parsers.default', [])
             ))
