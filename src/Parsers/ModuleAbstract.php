@@ -10,4 +10,11 @@ abstract class ModuleAbstract {
      */
     public abstract static function register() : array;
 
+    /**
+     * @return array
+     */
+    public static function settings() : array {
+        return [];
+    }
+
 }

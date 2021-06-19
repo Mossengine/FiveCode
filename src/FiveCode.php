@@ -5,7 +5,6 @@ use Mossengine\FiveCode\Helpers\___;
 use Mossengine\FiveCode\Parsers\Conditions;
 use Mossengine\FiveCode\Parsers\Executes;
 use Mossengine\FiveCode\Parsers\Functions;
-use Mossengine\FiveCode\Parsers\Instructions;
 use Mossengine\FiveCode\Parsers\Iterators;
 use Mossengine\FiveCode\Parsers\Values;
 use Mossengine\FiveCode\Parsers\Variables;
@@ -16,6 +15,26 @@ use Mossengine\FiveCode\Parsers\Variables;
  */
 class FiveCode
 {
+
+    const LOOP_INSTRUCTIONS_LIMIT = 100;
+    const LOOP_INSTRUCTION_LIMIT = 100;
+
+    /**
+     * @var bool
+     */
+    private $boolDebug = false;
+
+    /**
+     * @param bool|null $boolDebug
+     * @return $this|bool
+     */
+    public function isDebug(bool $boolDebug = null) {
+        if (!is_bool($boolDebug)) {
+            return $this->boolDebug;
+        }
+        $this->boolDebug = $boolDebug;
+        return $this;
+    }
 
     /**
      * @var array
@@ -188,9 +207,11 @@ class FiveCode
     /**
      * @param $stringPath
      * @param $mixedValue
+     * @return $this
      */
-    public function variableSet($stringPath, $mixedValue) {
+    public function variableSet($stringPath, $mixedValue) : self {
         ___::arraySet($this->arrayVariables, $stringPath, $mixedValue);
+        return $this;
     }
 
     /**
@@ -204,9 +225,11 @@ class FiveCode
 
     /**
      * @param $stringPath
+     * @return $this
      */
-    public function variableForget($stringPath) {
+    public function variableForget($stringPath) : self {
         ___::arrayForget($this->arrayVariables, $stringPath);
+        return $this;
     }
 
     /**
@@ -278,6 +301,7 @@ class FiveCode
         foreach ($stringParserNamespace::register() as $stringKey => $callable) {
             $this->parserSet($stringKey, $callable);
         }
+        $this->settingsMerge($stringParserNamespace::settings());
     }
 
     /**
@@ -341,21 +365,95 @@ class FiveCode
     }
 
     /**
+     * @var array
+     */
+    private $arraySettings = [
+        '_fivecode' => [
+            'instructions' => [
+                'max' => [
+                    'iteration' => 100,
+                    'duration' => 30
+                ]
+            ],
+            'instruction' => [
+                'max' => [
+                    'iteration' => 100,
+                    'duration' => 30
+                ]
+            ],
+        ]
+    ];
+
+    /**
+     * @param array|null $arraySettings
+     * @return $this|array
+     */
+    public function settings(array $arraySettings = null) {
+        if (is_null($arraySettings)) {
+            return $this->arraySettings;
+        }
+        $this->settingsMerge($arraySettings);
+        return $this;
+    }
+
+    /**
+     * @param $stringPath
+     * @param $mixedValue
+     * @return $this
+     */
+    public function settingSet($stringPath, $mixedValue) : self {
+        ___::arraySet($this->arraySettings, $stringPath, $mixedValue);
+        return $this;
+    }
+
+    /**
+     * @param $stringPath
+     * @param $mixedDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function settingGet($stringPath, $mixedDefault = null) {
+        return ___::arrayGet($this->arraySettings, $stringPath, $mixedDefault);
+    }
+
+    /**
+     * @param $stringPath
+     * @return $this
+     */
+    public function settingForget($stringPath) : self {
+        ___::arrayForget($this->arraySettings, $stringPath);
+        return $this;
+    }
+
+    /**
+     * @param array $arraySettings
+     * @return $this
+     */
+    public function settingsMerge(array $arraySettings = []) : self {
+        $this->arraySettings = array_replace_recursive(
+            $this->arraySettings,
+            $arraySettings
+        );
+        return $this;
+    }
+
+    /**
      * FiveCode constructor.
      * @param array $arrayParameters
      */
     public function __construct(array $arrayParameters = []) {
         $this
+            // Debug
+            ->isDebug(false !== ___::arrayGet($arrayParameters, 'debug', false))
+
             // Parsers
             ->parsers(array_merge(
                 [
-                    'instructions' => Instructions::class,
                     'values' => Values::class,
                     'variables' => Variables::class,
                     'conditions' => Conditions::class,
-                    'functions' => Functions::class,
                     'executes' => Executes::class,
-                    'iterators' => Iterators::class
+                    'iterators' => Iterators::class,
+//                    'functions' => Functions::class,
                 ],
                 ___::arrayGet($arrayParameters, 'parsers.default', [])
             ))
@@ -367,7 +465,10 @@ class FiveCode
 
             // Variables
             ->variables(___::arrayGet($arrayParameters, 'variables.default', []))
-            ->variablesAllowed(___::arrayGet($arrayParameters, 'variables.allowed', []));
+            ->variablesAllowed(___::arrayGet($arrayParameters, 'variables.allowed', []))
+
+            // Settings
+            ->settings(___::arrayGet($arrayParameters, 'settings.default', []));
     }
 
     /**
@@ -384,39 +485,119 @@ class FiveCode
      * @throws InstructionException
      */
     public function evaluate(array $arrayInstructions = []) : self {
-        $this->parse($arrayInstructions);
+        $this->instructions($arrayInstructions);
         return $this;
     }
 
     /**
-     * @param array $arrayInstructions
+     * @param mixed $mixedInstructionsOrInstruction
      * @return false|mixed|null
      * @throws InstructionException
      */
-    public function parse(array $arrayInstructions = []) {
-        $this->loopUp('parse');
-        $mixedResult = null;
-        if ($this->isLoopUnder('parse', 10)) {
-            foreach ($arrayInstructions as $arrayEvaluation) {
-                $stringEvaluationType = ___::arrayFirstKey($arrayEvaluation);
-                if (!$this->isParserAllowed($stringEvaluationType)) {
-                    throw new InstructionException('Disabled parser : ' . $stringEvaluationType);
+    public function instructions($mixedInstructionsOrInstruction = []) {
+        $this->debug('instructions', $mixedInstructionsOrInstruction);
+        $this->loopUp('instructions');
+        $mixedResult = $this->result();
+        if (
+            $this->isLoopUnder(
+                'instructions',
+                $this->settingGet('_fivecode.instructions.max.iteration')
+            )
+            // TODO: Come back and add max duration checks
+        ) {
+            foreach (
+                (
+                    !is_array($mixedInstructionsOrInstruction)
+                    || ___::arrayIsAssociative($mixedInstructionsOrInstruction)
+                        ? [$mixedInstructionsOrInstruction]
+                        : $mixedInstructionsOrInstruction
+                )
+                as $mixedInstruction
+            ) {
+                $mixedResult = $this->instruction($mixedInstruction);
+            }
+        }
+        $this->loopDown('instructions');
+
+        return $this->result($mixedResult);
+    }
+
+    /**
+     * @param mixed $mixedDataOrArray
+     * @return false|mixed|null
+     * @throws InstructionException
+     */
+    public function instruction($mixedDataOrArray = null) {
+        $this->debug('instruction', $mixedDataOrArray);
+        $mixedResult = $this->result();
+        if (!is_array($mixedDataOrArray)) {
+            $this->debug('literal', $mixedDataOrArray);
+            $mixedResult = $mixedDataOrArray;
+        } else if (!empty($mixedDataOrArray)) {
+            $this->loopUp('instruction');
+            if (!___::arrayIsAssociative($mixedDataOrArray)) {
+                $mixedResult = $this->instructions($mixedDataOrArray);
+            } else if (
+                $this->isLoopUnder(
+                    'instruction',
+                    $this->settingGet('_fivecode.instruction.max.iteration')
+                )
+                // TODO: Come back and add max duration checks
+            ) {
+                $stringInstructionType = ___::arrayFirstKey($mixedDataOrArray);
+                $mixedData = ___::arrayGet($mixedDataOrArray, $stringInstructionType, []);
+
+                if (!$this->isParserAllowed($stringInstructionType)) {
+                    throw new InstructionException('Disabled parser : ' . $stringInstructionType);
                 }
-                if (!is_callable($parser = $this->parserGet($stringEvaluationType))) {
-                    throw new InstructionException('Invalid parser : ' . $stringEvaluationType);
+                if (!is_callable($parser = $this->parserGet($stringInstructionType))) {
+                    throw new InstructionException('Invalid parser : ' . $stringInstructionType);
                 }
+
+                $this->debug($stringInstructionType . ' - data : ', $mixedData);
+
                 $mixedResult = call_user_func_array(
                     $parser,
                     [
                         $this,
-                        ___::arrayGet($arrayEvaluation, $stringEvaluationType, [])
+                        $mixedData
                     ]
                 );
+
+                $this->debug($stringInstructionType . ' - returned : ', $mixedResult);
             }
+            $this->loopDown('instruction');
         }
-        $this->loopDown('parse');
-        $this->variableSet('return', $mixedResult);
-        return $mixedResult;
+
+        return $this->result($mixedResult);
+    }
+
+    /**
+     * @param string $stringMessage
+     * @param mixed $mixedData
+     * @return $this
+     */
+    public function debug(string $stringMessage, $mixedData = '33b8b54a-fc92-4e52-97a5-80bcb83d2ce6') : self {
+        if ($this->isDebug()) {
+            echo PHP_EOL . '[' . microtime(true) . '] ' . $stringMessage . PHP_EOL
+                . (
+                    '33b8b54a-fc92-4e52-97a5-80bcb83d2ce6' !== $mixedData
+                        ? (json_encode($mixedData) . PHP_EOL)
+                        : null
+                );
+        }
+        return $this;
+    }
+
+    /**
+     * @param mixed $mixedData
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function result($mixedData = '33b8b54a-fc92-4e52-97a5-80bcb83d2ce6') {
+        if ('33b8b54a-fc92-4e52-97a5-80bcb83d2ce6' !== $mixedData) {
+            $this->variableSet('_return', $mixedData);
+        }
+        return $this->variableGet('_return', null);
     }
 
     /**
@@ -424,6 +605,8 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      */
     public function return($mixedDefault = null) {
-        return $this->variableGet('return', $mixedDefault);
+        $return = $this->variableGet('_return', $mixedDefault);
+        $this->debug('_return', $return);
+        return $return;
     }
 }

@@ -10,6 +10,17 @@ class ___ {
 
     /**
      * @param array $array
+     * @return bool
+     */
+    public static function arrayIsAssociative(array $array) : bool {
+        return (
+            !([] === $array)
+            && array_keys($array) !== range(0, count($array) - 1)
+        );
+    }
+
+    /**
+     * @param array $array
      * @param $stringPath
      * @return bool
      */
@@ -132,7 +143,7 @@ class ___ {
                         '==' => 'isLike',
                         '===' => 'isSame',
                         '!=' => 'isNotLike',
-                        '!==' => 'isDiff',
+                        '!==' => 'isNotSame',
                         '>' => 'isMore',
                         '>=' => 'isMoreOrSame',
                         '<' => 'isLess',
@@ -185,7 +196,7 @@ class ___ {
      * @param $mixedRight
      * @return bool
      */
-    public static function isDiff($mixedLeft, $mixedRight) : bool {
+    public static function isNotSame($mixedLeft, $mixedRight) : bool {
         return ($mixedLeft !== $mixedRight);
     }
 

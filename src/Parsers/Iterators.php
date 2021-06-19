@@ -15,164 +15,204 @@ class Iterators extends ModuleAbstract {
      */
     public static function register() : array {
         return [
-            'iterator' => function($fiveCode, $arrayData) { return self::parse($fiveCode, [$arrayData]); },
-            'iterators' => function($fiveCode, $arrayData) { return self::parse($fiveCode, $arrayData); },
+            'for' => function($fiveCode, $arrayData) { return self::for($fiveCode, $arrayData); },
+            'each' => function($fiveCode, $arrayData) { return self::each($fiveCode, $arrayData); },
+            'do' => function($fiveCode, $arrayData) { return self::do($fiveCode, $arrayData); },
+            'while' => function($fiveCode, $arrayData) { return self::while($fiveCode, $arrayData); }
+        ];
+    }
+
+    /**
+     * @return array|string
+     */
+    public static function settings() : array {
+        return [
+            '_iterators' => [
+                'for' => [
+                    'max' => [
+                        'iteration' => 10,
+                        'duration' => 10
+                    ]
+                ],
+                'each' => [
+                    'max' => [
+                        'iteration' => 10,
+                        'duration' => 10
+                    ]
+                ],
+                'do' => [
+                    'max' => [
+                        'iteration' => 10,
+                        'duration' => 10
+                    ]
+                ],
+                'while' => [
+                    'max' => [
+                        'iteration' => 10,
+                        'duration' => 10
+                    ]
+                ]
+            ]
         ];
     }
 
     /**
      * @param FiveCode $fiveCode
-     * @param array $arrayIterators
-     * @return false|mixed|null
-     */
-    public static function parse(FiveCode $fiveCode, array $arrayIterators = []) {
-        $mixedResult = null;
-
-        foreach ($arrayIterators as $arrayIterator) {
-            // for | each
-            $stringIteratorType = ___::arrayFirstKey($arrayIterator);
-
-            // Iterator data
-            $mixedIteratorData = ___::arrayGet($arrayIterator, $stringIteratorType, []);
-
-            // Iterator Id
-            $stringIteratorId = ___::arrayGet($mixedIteratorData, 'id', null);
-
-            // What type are we executing
-            if (in_array($stringIteratorType, ['for', 'each'])) {
-                $mixedResult = call_user_func_array(
-                    [self::class, $stringIteratorType],
-                    [$fiveCode, $stringIteratorId, $mixedIteratorData]
-                );
-            }
-
-            // Forget tracking keys
-            $fiveCode->variableForget(
-                'iterate.' . (
-                    !is_null($stringIteratorId)
-                        ? $stringIteratorId . '.'
-                        : ''
-                ) . 'index'
-            );
-            // Forget tracking values
-            $fiveCode->variableForget(
-                'iterate.' . (
-                    !is_null($stringIteratorId)
-                        ? $stringIteratorId . '.'
-                        : ''
-                ) . 'value'
-            );
-        }
-
-        $fiveCode->variableSet('return', $mixedResult);
-        return $mixedResult;
-    }
-
-    /**
-     * @param FiveCode $fiveCode
-     * @param $stringIteratorId
-     * @param $mixedIteratorData
-     * @return false|mixed|null
+     * @param array $arrayArguments
+     * @return array|\ArrayAccess|false|mixed|null
      * @throws InstructionException
      */
-    private static function for(FiveCode $fiveCode, $stringIteratorId, $mixedIteratorData) {
-        $mixedResult = null;
+    public static function for(FiveCode $fiveCode, array $arrayArguments = []) {
+        $mixedResult = $fiveCode->result();
+
+        // Get the arguments
+        $arrayForArguments = array_map(
+            function ($arrayArgument) use ($fiveCode) {
+                return $fiveCode->instructions($arrayArgument);
+            },
+            (array) ___::arrayGet($arrayArguments, 0, [])
+        );
+
+        $intStart = 0;
+        $intLimit = 0;
+        $intStep = 1;
+
+        // support more than one argument, middle argument is the operator ( type )
+        switch (count($arrayForArguments)) {
+            case 1:
+                $intLimit = (int) $arrayForArguments[0];
+                break;
+            case 2:
+                $intStart = (int) $arrayForArguments[0];
+                $intLimit = (int) $arrayForArguments[1];
+                break;
+            case 3:
+                $intStart = (int) $arrayForArguments[0];
+                $intLimit = (int) $arrayForArguments[1];
+                $intStep = (int) $arrayForArguments[2];
+                break;
+        }
 
         for (
-            $i = ___::arrayGet($mixedIteratorData, 'start', 0);
-            $i <= ___::arrayGet($mixedIteratorData, 'limit', 0);
-            $i += ___::arrayGet($mixedIteratorData, 'step', 1)
+            $i = $intStart;
+            $i <= $intLimit;
+            $i += (
+                ($intLimit >= $intStart)
+                    ? $intStep
+                    : $intStep * -1
+            )
         ) {
-            $mixedResult = self::work($fiveCode, $stringIteratorId, $i, null, $mixedIteratorData);
+            $fiveCode->loopUp('for');
+            $fiveCode->variableSet('_iterator.for.index', $i);
+            if (
+                $fiveCode->isLoopUnder(
+                    'for',
+                    $fiveCode->settingGet('_iterators.for.max.iteration')
+                )
+            ) {
+                $mixedResult = $fiveCode->instructions(
+                    ___::arrayGet($arrayArguments, 1, null)
+                );
+            }
         }
+        $fiveCode->loopSet('for', 0);
 
-        return $mixedResult;
+        $fiveCode->variableForget('_iterator.for.index');
+
+        return $fiveCode->result($mixedResult);
     }
 
     /**
      * @param FiveCode $fiveCode
-     * @param $stringIteratorId
-     * @param $mixedIteratorData
-     * @return false|mixed|null
+     * @param array $arrayArguments
+     * @return array|\ArrayAccess|false|mixed|null
      * @throws InstructionException
      */
-    private static function each(FiveCode $fiveCode, $stringIteratorId, $mixedIteratorData) {
-        $mixedResult = null;
+    public static function each(FiveCode $fiveCode, array $arrayArguments = []) {
+        $mixedResult = $fiveCode->result();
 
         foreach (
-            is_array(
-                $arrayData = (
-                    !is_null(
-                        $stringVariable = ___::arrayGet(
-                            $mixedIteratorData,
-                            'variable',
-                            null
-                        )
-                    )
-                    && is_string($stringVariable)
-                        ? (
-                            $fiveCode->isVariableAllowed($stringVariable, 'get')
-                                ? $fiveCode->variableGet($stringVariable, null)
-                                : []
-                        )
-                        : (
-                            ___::arrayGet(
-                                $mixedIteratorData,
-                                'value',
-                                []
-                            )
-                        )
-                )
-            )
-                ? $arrayData
-                : []
-            as $mixedIterateKey => $mixedIterateValue
+            (array) ___::arrayGet($arrayArguments, 0, [])
+            as $index => $item
         ) {
-            $mixedResult = self::work($fiveCode, $stringIteratorId, $mixedIterateKey, $mixedIterateValue, $mixedIteratorData);
+            $fiveCode->loopUp('each');
+            $fiveCode->variableSet('_iterator.each.index', $index);
+            $fiveCode->variableSet('_iterator.each.item', $item);
+            if (
+                $fiveCode->isLoopUnder(
+                    'each',
+                    $fiveCode->settingGet('_iterators.each.max.iteration')
+                )
+            ) {
+                $mixedResult = $fiveCode->instructions(
+                    ___::arrayGet($arrayArguments, 1, null)
+                );
+            }
         }
+        $fiveCode->loopSet('each', 0);
 
-        return $mixedResult;
+        $fiveCode->variableForget('_iterator.each.index');
+        $fiveCode->variableForget('_iterator.each.item');
+
+        return $fiveCode->result($mixedResult);
     }
 
     /**
      * @param FiveCode $fiveCode
-     * @param $stringIteratorId
-     * @param $index
-     * @param $value
-     * @param $mixedIteratorData
+     * @param array $arrayArguments
      * @return false|mixed|null
      * @throws InstructionException
      */
-    private static function work(FiveCode $fiveCode, $stringIteratorId, $index, $value, $mixedIteratorData) {
-        $fiveCode->variableSet(
-            'iterate.' . (
-                !is_null($stringIteratorId)
-                    ? $stringIteratorId . '.'
-                    : ''
-            ) . 'index',
-            $index
-        );
-        $fiveCode->variableSet(
-            'iterate.' . (
-                !is_null($stringIteratorId)
-                    ? $stringIteratorId . '.'
-                    : ''
-            ) . 'value',
-            $value
-        );
-        return $fiveCode->parse(
-            ___::arrayGet(
-                $mixedIteratorData,
-                'instructions',
-                [
-                    ___::arrayGet(
-                        $mixedIteratorData,
-                        'instruction',
-                        null
-                    )
-                ]
+    public static function do(FiveCode $fiveCode, array $arrayArguments = []) {
+        do {
+            $fiveCode->loopUp('do');
+            $fiveCode->variableSet('_iterator.do.iteration', $fiveCode->loopGet('do'));
+            $mixedResult = $fiveCode->instructions(
+                ___::arrayGet($arrayArguments, 0, null)
+            );
+        } while (
+            $fiveCode->isLoopUnder(
+                'do',
+                $fiveCode->settingGet('_iterators.do.max.iteration')
+            )
+            && $fiveCode->instructions(
+                ___::arrayGet($arrayArguments, 1, false)
             )
         );
+
+        $fiveCode->loopSet('do', 0);
+        $fiveCode->variableForget('_iterator.do.iteration');
+
+        return $fiveCode->result($mixedResult);
+    }
+
+    /**
+     * @param FiveCode $fiveCode
+     * @param array $arrayArguments
+     * @return array|\ArrayAccess|mixed|null
+     * @throws InstructionException
+     */
+    public static function while(FiveCode $fiveCode, array $arrayArguments = []) {
+        while (
+            $fiveCode->isLoopUnder(
+                'while',
+                $fiveCode->settingGet('_iterators.while.max.iteration')
+            )
+            && $fiveCode->instructions(
+                ___::arrayGet($arrayArguments, 0, false)
+            )
+        ) {
+            $fiveCode->loopUp('while');
+            $fiveCode->variableSet('_iterator.while.iteration', $fiveCode->loopGet('while'));
+            $mixedResult = $fiveCode->instructions(
+                ___::arrayGet($arrayArguments, 1, null)
+            );
+        };
+
+        $fiveCode->loopSet('while', 0);
+        $fiveCode->variableForget('_iterator.while.iteration');
+
+        return $fiveCode->result($mixedResult);
     }
 
 }

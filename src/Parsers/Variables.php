@@ -15,87 +15,69 @@ class Variables extends ModuleAbstract {
      */
     public static function register() : array {
         return [
-            'variable' => function($fiveCode, $arrayData) { return self::parse($fiveCode, [$arrayData]); },
-            'variables' => function($fiveCode, $arrayData) { return self::parse($fiveCode, $arrayData); },
+            'set' => function($fiveCode, $arrayData) { return self::set($fiveCode, $arrayData); },
+            'get' => function($fiveCode, $arrayData) { return self::get($fiveCode, $arrayData); },
+            'forget' => function($fiveCode, $arrayData) { return self::forget($fiveCode, $arrayData); }
         ];
     }
 
     /**
      * @param FiveCode $fiveCode
-     * @param array $arrayVariables
-     * @return array|\ArrayAccess|bool|mixed|null
+     * @param array $mixedData
+     * @return array|\ArrayAccess|mixed|null
      * @throws InstructionException
      */
-    public static function parse(FiveCode $fiveCode, array $arrayVariables = []) {
-        $mixedResult = null;
-
-        foreach ($arrayVariables as $arrayVariable) {
-            $stringVariableType = ___::arrayFirstKey($arrayVariable);
-            $mixedVariableData = ___::arrayGet($arrayVariable, $stringVariableType, []);
-            $mixedVariableKey = ___::arrayGet($mixedVariableData, 'key', ___::arrayFirstKey($mixedVariableData));
-            $mixedVariableValueOrDefault = (
-                !is_null(
-                    $stringVariable = ___::arrayGet(
-                        $mixedVariableData,
-                        'variable',
-                        null
-                    )
-                )
-                && is_string($stringVariable)
-                    ? (
-                        $fiveCode->isVariableAllowed($stringVariable, 'get')
-                            ? $fiveCode->variableGet($stringVariable, null)
-                            : []
-                    )
-                    : (
-                        ___::arrayGet(
-                            $mixedVariableData,
-                            'value',
-                            ___::arrayFirstValue($mixedVariableData)
-                        )
-                    )
+    public static function set(FiveCode $fiveCode, array $mixedData = []) {
+        if (
+            !empty($mixedData)
+            && is_string($stringKey = ___::arrayGet($mixedData, 0, null))
+            && $fiveCode->isVariableAllowed($stringKey, 'set')
+        ) {
+            $fiveCode->variableSet(
+                $stringKey,
+                $fiveCode->instructions(___::arrayGet($mixedData, 1, null))
             );
-
-            switch ($stringVariableType) {
-                case 'all':
-                    $mixedResult = (
-                        empty($fiveCode->variablesAllowed())
-                        || (
-                            (
-                                ['*'] === array_keys($fiveCode->variablesAllowed())
-                                && $fiveCode->isVariableAllowed('*', 'get')
-                            )
-                                ? $fiveCode->variables()
-                                : []
-                        )
-                    );
-                    break;
-                case 'get':
-                    $mixedResult = (
-                        $fiveCode->isVariableAllowed($mixedVariableKey, 'get')
-                            ? $fiveCode->variableGet($mixedVariableKey, $mixedVariableValueOrDefault)
-                            : null
-                    );
-                    break;
-                case 'set':
-                    if ($fiveCode->isVariableAllowed($mixedVariableKey, 'set')) {
-                        $fiveCode->variableSet($mixedVariableKey, $mixedVariableValueOrDefault);
-                    }
-                    $mixedResult = $fiveCode->variableGet('return', $mixedResult);
-                    break;
-                case 'forget':
-                    if ($fiveCode->isVariableAllowed($mixedVariableKey, 'forget')) {
-                        $fiveCode->variableForget($mixedVariableKey);
-                    }
-                    $mixedResult = $fiveCode->variableGet('return', $mixedResult);
-                    break;
-                default:
-                    throw new InstructionException('Invalid variable type : ' . $stringVariableType);
-            }
         }
 
-        $fiveCode->variableSet('return', $mixedResult);
-        return $mixedResult;
+        return $fiveCode->result();
+    }
+
+    /**
+     * @param FiveCode $fiveCode
+     * @param array $mixedData
+     * @return array|\ArrayAccess|mixed|null
+     * @throws InstructionException
+     */
+    public static function get(FiveCode $fiveCode, array $mixedData = []) {
+        $mixedResult = $fiveCode->result();
+        if (
+            !empty($mixedData)
+            && is_string($stringKey = ___::arrayGet($mixedData, 0, null))
+            && $fiveCode->isVariableAllowed($stringKey, 'get')
+        ) {
+            $mixedResult = $fiveCode->variableGet(
+                $stringKey,
+                $fiveCode->instructions(___::arrayGet($mixedData, 1, null))
+            );
+        }
+
+        return $fiveCode->result($mixedResult);
+    }
+
+    /**
+     * @param FiveCode $fiveCode
+     * @param array $mixedData
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public static function forget(FiveCode $fiveCode, array $mixedData = []) {
+        if (
+            !empty($mixedData)
+            && is_string($stringKey = ___::arrayGet($mixedData, 0, null))
+            && $fiveCode->isVariableAllowed($stringKey, 'forget')
+        ) {
+            $fiveCode->variableForget($stringKey);
+        }
+        return $fiveCode->result();
     }
 
 }
