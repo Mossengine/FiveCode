@@ -49,7 +49,9 @@ class ConstructionTest extends PHPUnit_Framework_TestCase
             [
                 'a' => function() { return 'A'; }
             ],
-            $fiveCode->functions()
+            [
+                'a' => $fiveCode->functions()['a']
+            ]
         );
         $this->assertEquals(
             [

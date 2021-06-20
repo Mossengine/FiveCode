@@ -149,7 +149,7 @@ class FiveCode
      */
     public function functionAdd($stringFunctionKey, $stringFunctionNamespace) {
         if (
-            is_array($stringFunctionNamespace)
+            !is_callable($stringFunctionNamespace)
         ) {
             foreach ($stringFunctionNamespace::register() as $stringKey => $callable) {
                 $this->functionSet($stringKey, $callable);

@@ -17,7 +17,7 @@ class Maths extends FunctionsAbstract {
             'maths.subtract' => function($fiveCode, $mixedData) { return self::subtract($mixedData); },
             'maths.divide' => function($fiveCode, $mixedData) { return self::divide($mixedData); },
             'maths.multiply' => function($fiveCode, $mixedData) { return self::multiply($mixedData); },
-            'maths.random' => function($fiveCode, $mixedData) { return self::random($fiveCode, $mixedData); },
+            'maths.random' => function($fiveCode, $mixedData) { return self::random($mixedData); },
         ];
     }
 
