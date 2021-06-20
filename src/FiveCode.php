@@ -455,20 +455,20 @@ class FiveCode
                     'iterators' => Iterators::class,
 //                    'functions' => Functions::class,
                 ],
-                ___::arrayGet($arrayParameters, 'parsers.default', [])
+                ___::arrayGet($arrayParameters, 'parsers.include', [])
             ))
             ->parsersAllowed(___::arrayGet($arrayParameters, 'parsers.allowed', []))
 
             // Functions
-            ->functions(___::arrayGet($arrayParameters, 'functions.default', []))
+            ->functions(___::arrayGet($arrayParameters, 'functions.include', []))
             ->functionsAllowed(___::arrayGet($arrayParameters, 'functions.allowed', []))
 
             // Variables
-            ->variables(___::arrayGet($arrayParameters, 'variables.default', []))
+            ->variables(___::arrayGet($arrayParameters, 'variables.include', []))
             ->variablesAllowed(___::arrayGet($arrayParameters, 'variables.allowed', []))
 
             // Settings
-            ->settings(___::arrayGet($arrayParameters, 'settings.default', []));
+            ->settings(___::arrayGet($arrayParameters, 'settings.include', []));
     }
 
     /**

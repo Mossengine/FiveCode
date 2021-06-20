@@ -90,7 +90,7 @@ class ConditionsTest extends PHPUnit_Framework_TestCase
         $this->assertTrue(
             Mossengine\FiveCode\FiveCode::make([
                 'variables' => [
-                    'default' => [
+                    'include' => [
                         'key1' => 1,
                         'key2' => 1
                     ]

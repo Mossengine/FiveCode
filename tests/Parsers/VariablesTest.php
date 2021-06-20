@@ -11,7 +11,7 @@ class VariablesTest extends PHPUnit_Framework_TestCase
             'value1',
             Mossengine\FiveCode\FiveCode::make([
                 'variables' => [
-                    'default' => [
+                    'include' => [
                         'key1' => 'value1'
                     ]
                 ]
@@ -69,7 +69,7 @@ class VariablesTest extends PHPUnit_Framework_TestCase
             'value1',
             Mossengine\FiveCode\FiveCode::make([
                 'variables' => [
-                    'default' => [
+                    'include' => [
                         'key1' => 'value1'
                     ]
                 ]
@@ -89,7 +89,7 @@ class VariablesTest extends PHPUnit_Framework_TestCase
             'value1',
             Mossengine\FiveCode\FiveCode::make([
                 'variables' => [
-                    'default' => [
+                    'include' => [
                         'key1' => 'value1'
                     ]
                 ]
@@ -112,7 +112,7 @@ class VariablesTest extends PHPUnit_Framework_TestCase
             'default',
             Mossengine\FiveCode\FiveCode::make([
                 'variables' => [
-                    'default' => [
+                    'include' => [
                         'key1' => 'value1'
                     ]
                 ]
