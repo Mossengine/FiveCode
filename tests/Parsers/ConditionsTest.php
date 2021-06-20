@@ -230,6 +230,18 @@ class ConditionsTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testCanIfAllOfOne() {
+        $this->assertTrue(
+            Mossengine\FiveCode\FiveCode::make()
+                ->evaluate([
+                    ['if' => [
+                        ['all' => ['===' => [1, 1]]]
+                    ]]
+                ])
+                ->return(false)
+        );
+    }
+
     public function testCanIfAny() {
         $this->assertTrue(
             Mossengine\FiveCode\FiveCode::make()
@@ -240,6 +252,18 @@ class ConditionsTest extends PHPUnit_Framework_TestCase
                             ['===' => [1, 1]],
                             ['===' => [1, 3]]
                         ]]
+                    ]]
+                ])
+                ->return(false)
+        );
+    }
+
+    public function testCanIfAnyOfOne() {
+        $this->assertTrue(
+            Mossengine\FiveCode\FiveCode::make()
+                ->evaluate([
+                    ['if' => [
+                        ['any' => ['===' => [1, 1]]]
                     ]]
                 ])
                 ->return(false)
