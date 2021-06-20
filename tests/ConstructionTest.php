@@ -43,7 +43,17 @@ class ConstructionTest extends PHPUnit_Framework_TestCase
                         ]
                     ]
                 ]
-            ]
+            ],
+            'parsers' => [
+                'include' => [],
+                'allowed' => [
+                    'call' => true,
+                    'get' => true,
+                    'each' => true,
+                    'while' => false
+                ]
+            ],
+            'debug' => true
         ]);
         $this->assertEquals(
             [
@@ -80,6 +90,15 @@ class ConstructionTest extends PHPUnit_Framework_TestCase
                 ]
             ],
             $fiveCode->variablesAllowed()
+        );
+        $this->assertEquals(
+            [
+                'call' => true,
+                'get' => true,
+                'each' => true,
+                'while' => false
+            ],
+            $fiveCode->parsersAllowed()
         );
     }
 

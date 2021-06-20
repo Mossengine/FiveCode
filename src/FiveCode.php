@@ -118,18 +118,6 @@ class FiveCode
     private $arrayFunctions = [];
 
     /**
-     * @param array|null $arrayFunctions
-     * @return $this|array
-     */
-    public function functionsOld(array $arrayFunctions = null) {
-        if (is_null($arrayFunctions)) {
-            return $this->arrayFunctions;
-        }
-        $this->arrayFunctions = $arrayFunctions;
-        return $this;
-    }
-
-    /**
      * @param array|null $arrayFunctionNamespace
      * @return $this|array
      */
