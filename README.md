@@ -8,7 +8,7 @@
     <a href="https://github.com/mossengine/fivecode"><img src="https://img.shields.io/badge/source-mossengine/fivecode-blue.svg?style=flat-square" alt="Source Code"></a>
     <a href="https://packagist.org/packages/mossengine/fivecode"><img src="https://img.shields.io/packagist/v/mossengine/fivecode.svg?style=flat-square&label=release" alt="Download Package"></a>
     <a href="https://php.net"><img src="https://img.shields.io/packagist/php-v/mossengine/fivecode.svg?style=flat-square&colorB=%238892BF" alt="PHP Programming Language"></a>
-    <a href="https://travis-ci.org/github/Mossengine/FiveCode"><img src="https://img.shields.io/travis/mossengine/fivecode?label=CI&logo=travis&style=flat-square" alt="Build Status"></a>
+    <a href="https://travis-ci.org/github/Mossengine/FiveCode"><img src="https://img.shields.io/circleci/build/github/Mossengine/FiveCode/release%252F2.0.0?label=CI&logo=travis&style=flat-square" alt="Build Status"></a>
     <a href="https://codecov.io/gh/mossengine/fivecode"><img src="https://img.shields.io/codecov/c/gh/mossengine/fivecode?label=codecov&logo=codecov&style=flat-square" alt="Codecov Code Coverage"></a>
     <a href="https://github.com/mossengine/fivecode/blob/master/LICENSE"><img src="https://img.shields.io/packagist/l/mossengine/fivecode.svg?style=flat-square&colorB=darkcyan" alt="Read License"></a>
     <a href="https://packagist.org/packages/mossengine/fivecode/stats"><img src="https://img.shields.io/packagist/dt/mossengine/fivecode.svg?style=flat-square&colorB=darkmagenta" alt="Package downloads on Packagist"></a>
