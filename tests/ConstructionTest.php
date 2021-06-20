@@ -19,7 +19,7 @@ class ConstructionTest extends PHPUnit_Framework_TestCase
     public function testIfCanBeMadeWithConstructors() {
         $fiveCode = Mossengine\FiveCode\FiveCode::make([
             'functions' => [
-                'default' => [
+                'include' => [
                     'a' => function() { return 'A'; }
                 ],
                 'allowed' => [
@@ -27,7 +27,7 @@ class ConstructionTest extends PHPUnit_Framework_TestCase
                 ]
             ],
             'variables' => [
-                'default' => [
+                'include' => [
                     'a' => 'A',
                     'b' => [
                         'c' => [

@@ -1,9 +1,10 @@
-<?php namespace Mossengine\FiveCode\Parsers;
+<?php namespace Mossengine\FiveCode\Functions;
+
 /**
- * Class ModuleAbstract
+ * Class FunctionsAbstract
  * @package Mossengine\FiveCode\Parsers
  */
-abstract class ModuleAbstract {
+abstract class FunctionsAbstract {
 
     /**
      * @return array

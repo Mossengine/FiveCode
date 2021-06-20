@@ -8,7 +8,7 @@ use Mossengine\FiveCode\Helpers\___;
  * Class Iterators
  * @package Mossengine\FiveCode\Parsers
  */
-class Iterators extends ModuleAbstract {
+class Iterators extends ParsersAbstract {
 
     /**
      * @return array|string

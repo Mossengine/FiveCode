@@ -7,7 +7,7 @@ use Mossengine\FiveCode\FiveCode;
  * Class Executes
  * @package Mossengine\FiveCode\Parsers
  */
-class Executes extends ModuleAbstract {
+class Executes extends ParsersAbstract {
 
     /**
      * @return array|string
@@ -40,19 +40,29 @@ class Executes extends ModuleAbstract {
             && !empty($stringFunctionName = array_shift($arrayArguments))
             && $fiveCode->isFunctionAllowed($stringFunctionName)
         ) {
-            $callable = $fiveCode->functionGet($stringFunctionName, null);
-            $mixedResult = call_user_func_array(
-                (
-                    is_callable($callable)
-                        ? $callable
-                        : (
-                            function_exists($stringFunctionName)
-                                ? $stringFunctionName
-                                : function() { return null; }
-                        )
-                ),
-                $arrayArguments
-            );
+            if (
+                is_callable(
+                    $callable = $fiveCode->functionGet($stringFunctionName, null)
+                )
+            ) {
+                $mixedResult = call_user_func_array(
+                    $callable,
+                    [
+                        $fiveCode,
+                        $arrayArguments
+                    ]
+                );
+            } else if (
+                function_exists($stringFunctionName)
+            ) {
+                // Call the function to get the results
+                $mixedResult = call_user_func_array(
+                    $stringFunctionName,
+                    $arrayArguments
+                );
+            } else {
+                $mixedResult = null;
+            }
         }
 
         return $fiveCode->result($mixedResult);

@@ -2,13 +2,12 @@
 
 use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\FiveCode;
-use Mossengine\FiveCode\Helpers\___;
 
 /**
  * Class Values
  * @package Mossengine\FiveCode\Parsers
  */
-class Values extends ModuleAbstract {
+class Values extends ParsersAbstract {
 
     /**
      * @return array|string

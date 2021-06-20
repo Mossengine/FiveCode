@@ -8,7 +8,7 @@ use Mossengine\FiveCode\Helpers\___;
  * Class Conditions
  * @package Mossengine\FiveCode\Parsers
  */
-class Conditions extends ModuleAbstract {
+class Conditions extends ParsersAbstract {
 
     /**
      * @return array|string

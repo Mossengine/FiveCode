@@ -32,7 +32,7 @@ class ExecutesTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make([
                 'functions' => [
                     'include' => [
-                        '_add' => function($a, $b) { return $a + $b; }
+                        '_add' => function($fivecode, $data) { return $data[0] + $data[1]; }
                     ],
                     'allowed' => [
                         '*' => false,

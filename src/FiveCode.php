@@ -1,6 +1,7 @@
 <?php namespace Mossengine\FiveCode;
 
 use Mossengine\FiveCode\Exceptions\InstructionException;
+use Mossengine\FiveCode\Functions\Maths;
 use Mossengine\FiveCode\Helpers\___;
 use Mossengine\FiveCode\Parsers\Conditions;
 use Mossengine\FiveCode\Parsers\Executes;
@@ -120,12 +121,46 @@ class FiveCode
      * @param array|null $arrayFunctions
      * @return $this|array
      */
-    public function functions(array $arrayFunctions = null) {
+    public function functionsOld(array $arrayFunctions = null) {
         if (is_null($arrayFunctions)) {
             return $this->arrayFunctions;
         }
         $this->arrayFunctions = $arrayFunctions;
         return $this;
+    }
+
+    /**
+     * @param array|null $arrayFunctionNamespace
+     * @return $this|array
+     */
+    public function functions(array $arrayFunctionNamespace = null) {
+        if (is_null($arrayFunctionNamespace)) {
+            return $this->arrayFunctions;
+        }
+        foreach ($arrayFunctionNamespace as $stringFunctionKey => $stringFunctionNamespace) {
+            $this->functionAdd($stringFunctionKey, $stringFunctionNamespace);
+        }
+        return $this;
+    }
+
+    /**
+     * @param $stringFunctionKey
+     * @param $stringFunctionNamespace
+     */
+    public function functionAdd($stringFunctionKey, $stringFunctionNamespace) {
+        if (
+            is_array($stringFunctionNamespace)
+        ) {
+            foreach ($stringFunctionNamespace::register() as $stringKey => $callable) {
+                $this->functionSet($stringKey, $callable);
+            }
+            $this->settingsMerge($stringFunctionNamespace::settings());
+        } else if (
+            is_string($stringFunctionKey)
+            && is_callable($stringFunctionNamespace)
+        ) {
+            $this->functionSet($stringFunctionKey, $stringFunctionNamespace);
+        }
     }
 
     /**
@@ -284,11 +319,11 @@ class FiveCode
     private $arrayParsers = [];
 
     /**
-     * @param array $stringParserNamespaces
+     * @param array $arrayParserNamespaces
      * @return $this
      */
-    public function parsers(array $stringParserNamespaces = []) : self {
-        foreach ($stringParserNamespaces as $stringParserNamespace) {
+    public function parsers(array $arrayParserNamespaces = []) : self {
+        foreach ($arrayParserNamespaces as $stringParserNamespace) {
             $this->parserAdd($stringParserNamespace);
         }
         return $this;
@@ -452,15 +487,19 @@ class FiveCode
                     'variables' => Variables::class,
                     'conditions' => Conditions::class,
                     'executes' => Executes::class,
-                    'iterators' => Iterators::class,
-//                    'functions' => Functions::class,
+                    'iterators' => Iterators::class
                 ],
                 ___::arrayGet($arrayParameters, 'parsers.include', [])
             ))
             ->parsersAllowed(___::arrayGet($arrayParameters, 'parsers.allowed', []))
 
             // Functions
-            ->functions(___::arrayGet($arrayParameters, 'functions.include', []))
+            ->functions(array_merge(
+                [
+                    'maths' => Maths::class
+                ],
+                ___::arrayGet($arrayParameters, 'functions.include', [])
+            ))
             ->functionsAllowed(___::arrayGet($arrayParameters, 'functions.allowed', []))
 
             // Variables

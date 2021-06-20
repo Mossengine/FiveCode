@@ -8,7 +8,7 @@ use Mossengine\FiveCode\Helpers\___;
  * Class Variables
  * @package Mossengine\FiveCode\Parsers
  */
-class Variables extends ModuleAbstract {
+class Variables extends ParsersAbstract {
 
     /**
      * @return array|string
