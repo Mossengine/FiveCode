@@ -95,7 +95,11 @@ class Iterators extends ParsersAbstract {
 
         for (
             $i = $intStart;
-            $i <= $intLimit;
+            $i != (
+                ($intLimit >= $intStart)
+                    ? ($intLimit + 1)
+                    : ($intLimit - 1)
+            );
             $i += (
                 ($intLimit >= $intStart)
                     ? $intStep

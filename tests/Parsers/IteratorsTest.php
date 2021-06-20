@@ -48,6 +48,27 @@ class IteratorsTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testCanForStartToLimitReverse() {
+        $this->assertEquals(
+            2,
+            Mossengine\FiveCode\FiveCode::make()
+                ->evaluate([
+                    ['for' => [
+                        [7, 2],
+                        [
+                            ['set' => [
+                                'key1',
+                                ['get' => [
+                                    '_iterator.for.index'
+                                ]]
+                            ]]
+                        ]
+                    ]]
+                ])
+                ->variableGet('key1', 'default')
+        );
+    }
+
     public function testCanForStartToLimitWhileStepping() {
         $this->assertEquals(
             4,
