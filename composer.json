@@ -27,8 +27,8 @@
   ],
   "require": {
     "php": ">=7.0",
-    "ramsey/uuid": "3.4.1",
-    "illuminate/support": "5.2.32",
+    "ramsey/uuid": "^3.4.1",
+    "illuminate/support": "^5.2.32",
     "ext-json": "*"
   },
   "require-dev": {
