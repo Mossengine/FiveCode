@@ -78,12 +78,12 @@ class IteratorsTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make()
                 ->evaluate([
                     ['each' => [
-                        [
+                        ['array' => [
                             5,
                             6,
                             7,
                             'eight'
-                        ],
+                        ]],
                         [
                             ['set' => [
                                 'key1.index',
@@ -113,12 +113,12 @@ class IteratorsTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make()
                 ->evaluate([
                     ['each' => [
-                        [
+                        ['array' => [
                             'five' => 5,
                             'six' => 6,
                             'seven' => 7,
                             8 => 'eight'
-                        ],
+                        ]],
                         [
                             ['set' => [
                                 'key1.index',

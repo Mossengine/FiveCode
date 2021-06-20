@@ -132,7 +132,9 @@ class Iterators extends ParsersAbstract {
         $mixedResult = $fiveCode->result();
 
         foreach (
-            (array) ___::arrayGet($arrayArguments, 0, [])
+            (array) $fiveCode->instructions(
+                ___::arrayGet($arrayArguments, 0, [])
+            )
             as $index => $item
         ) {
             $fiveCode->loopUp('each');
