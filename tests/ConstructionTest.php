@@ -52,9 +52,12 @@ class ConstructionTest extends PHPUnit_Framework_TestCase
                     'each' => true,
                     'while' => false
                 ]
-            ],
-            'debug' => true
+            ]
         ]);
+
+        $fiveCode->debug('exercise for coverage with data', ['some' => 'data']);
+        $fiveCode->debug('exercise for coverage without data');
+
         $this->assertEquals(
             [
                 'a' => function() { return 'A'; }
