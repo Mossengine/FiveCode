@@ -17,4 +17,29 @@ class ValuesTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testCanArray() {
+        $this->assertEquals(
+            [
+                'A',
+                'B',
+                'C'
+            ],
+            Mossengine\FiveCode\FiveCode::make([
+                'variables' => [
+                    'include' => [
+                        'c' => 'C'
+                    ]
+                ]
+            ])
+                ->evaluate([
+                    ['array' => [
+                        'A',
+                        'B',
+                        ['get' => ['c', 'default']]
+                    ]]
+                ])
+                ->return('default')
+        );
+    }
+
 }
