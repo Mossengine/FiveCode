@@ -1,30 +1,22 @@
-# FiveCode
+<h1 align="center">Mossengine/FiveCode</h1>
 
-[![Latest Stable Version](https://poser.pugx.org/mossengine/fivecode/v/stable)](https://packagist.org/packages/mossengine/fivecode)
-[![Latest Unstable Version](https://poser.pugx.org/mossengine/fivecode/v/unstable)](https://packagist.org/packages/mossengine/fivecode)
-[![License](https://poser.pugx.org/mossengine/fivecode/license)](https://packagist.org/packages/mossengine/fivecode)
-[![composer.lock](https://poser.pugx.org/mossengine/fivecode/composerlock)](https://packagist.org/packages/mossengine/fivecode)
+<p align="center">
+    <strong>A PHP library for evaluating a 5th Generation programming structure called FiveCode.</strong>
+</p>
 
-[![Build Status](https://travis-ci.org/Mossengine/FiveCode.svg?branch=master)](https://travis-ci.org/Mossengine/FiveCode)
-[![codecov](https://codecov.io/gh/Mossengine/FiveCode/branch/master/graph/badge.svg)](https://codecov.io/gh/Mossengine/FiveCode)
+<p align="center">
+    <a href="https://github.com/mossengine/fivecode"><img src="https://img.shields.io/badge/source-mossengine/fivecode-blue.svg?style=flat-square" alt="Source Code"></a>
+    <a href="https://packagist.org/packages/mossengine/fivecode"><img src="https://img.shields.io/packagist/v/mossengine/fivecode.svg?style=flat-square&label=release" alt="Download Package"></a>
+    <a href="https://php.net"><img src="https://img.shields.io/packagist/php-v/mossengine/fivecode.svg?style=flat-square&colorB=%238892BF" alt="PHP Programming Language"></a>
+    <img src="https://img.shields.io/circleci/build/github/Mossengine/FiveCode/master?label=CI&logo=travis&style=flat-square" alt="Build Status">
+    <a href="https://codecov.io/github/mossengine/fivecode"><img src="https://img.shields.io/codecov/c/gh/mossengine/fivecode/master?label=codecov&logo=codecov&style=flat-square" alt="Codecov Code Coverage"></a>
+    <a href="https://github.com/mossengine/fivecode/blob/master/LICENSE"><img src="https://img.shields.io/packagist/l/mossengine/fivecode.svg?style=flat-square&colorB=darkcyan" alt="Read License"></a>
+    <a href="https://packagist.org/packages/mossengine/fivecode/stats"><img src="https://img.shields.io/packagist/dt/mossengine/fivecode.svg?style=flat-square&colorB=darkmagenta" alt="Package downloads on Packagist"></a>
+    <a href="https://phpc.chat/channel/brenmoss"><img src="https://img.shields.io/badge/phpc.chat-%23brenmoss-darkslateblue?style=flat-square" alt="Chat with the maintainers"></a>
+</p>
 
-[![Total Downloads](https://poser.pugx.org/mossengine/fivecode/downloads)](https://packagist.org/packages/mossengine/fivecode)
-[![Monthly Downloads](https://poser.pugx.org/mossengine/fivecode/d/monthly)](https://packagist.org/packages/mossengine/fivecode)
-[![Daily Downloads](https://poser.pugx.org/mossengine/fivecode/d/daily)](https://packagist.org/packages/mossengine/fivecode)
-
-PHP Class to enable fifth generation instructional code driven by programmatic instructions to execute under a controlled logic in the backend. 
-
-
-## Functions
-### __constructor()
-```php
-<?php
-// Currently no constructor but one will be here soon to support limits and settings.
-```
 
 ## Installation
-
-### With Composer
 
 ```
 $ composer require mossengine/fivecode
@@ -38,70 +30,39 @@ $ composer require mossengine/fivecode
 }
 ```
 
+## Usage
+
+### new FiveCode()
 ```php
-<?php
 // Require the autoloader, normal composer stuff
 require 'vendor/autoload.php';
 
 // Instantiate a FiveCode class
-$classFiveCode = new Mossengine\FiveCode\FiveCode;
+$fiveCode = new Mossengine\FiveCode\FiveCode();
 
-// Execute an array of JCode directly into the class
-$classFiveCode->execute([
-    'variables' => [
-        'boolResult' => false
-    ],
-    'instructions' => [
-        [
-            'type' => 'variables',
-            'variables' => [
-                [
-                    'variable' => 'boolResult',
-                    'type' => 'value',
-                    'value' => true
-                ]
-            ]
-        ]
-    ]
+// Evaluate an array of FiveCode through the evaluate class method.
+$fiveCode->evaluate([
+    ['' => []],
+    ['' => []],
+    ['' => []],
+    ['' => []]
 ]);
 ```
 
-
-### Without Composer
-
-Why are you not using [composer](http://getcomposer.org/)? Download [Jcode.php](https://github.com/Mossengine/FiveCode/blob/master/src/FiveCode.php) from the repo and save the file into your project path somewhere. This project does not support composerless environments.
-
-
-### String JSON
-
-Instead of PHP Associative Array you can also just send in JSON stringify structure and to save you the time we decode it for you.
-
+### FiveCode::make()
 ```php
-$classFiveCode->executeJson('{"variables":{"boolResult":false},"instructions":[{"type":"variables","variables":[{"variable":"boolResult","type":"value","value":true}]}]}');
+// Require the autoloader, normal composer stuff
+require 'vendor/autoload.php';
+
+// Use the static make method and immediately evaluate an array of instructions
+Mossengine\FiveCode\FiveCode::make()
+    ->evaluate([
+        ['' => []],
+        ['' => []],
+        ['' => []],
+        ['' => []]
+    ]);
 ```
 
-
-### Getting back the results
-
-Simply call on the variable function and define a variable key to get a specific key value back or no defined key and you will get all the variables back
-
-```php
-$mixedValue = $classFiveCode->variable('boolResult');
-
-$arrayVariables = $classFiveCode->variable();
-```
-
-
-### Modify variables
-
-You can also modify variable values or define new variables by using the exact same variable function but provide a second parameter for the value you wish to assign to the variable name
-
-```php
-$classFiveCode->variable('boolResult', false);
-
-$classFiveCode->variable('stringNewVariable', 'Hello Wolrd is cliché!');
-
-$classFiveCode->variable(null, [
-    'new' => 'array'
-]);
-```
+## Documentation
+Read the <a href="/docs/index.md">docs</a> for more details on FiveCode language structure or to create your own parsers/functions to provide more capabilities

@@ -1,6 +1,15 @@
-<?php
+<?php namespace Mossengine\FiveCode;
 
-namespace Mossengine\FiveCode;
+use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
+use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
+use Mossengine\FiveCode\Functions\Maths;
+use Mossengine\FiveCode\Helpers\___;
+use Mossengine\FiveCode\Parsers\Conditions;
+use Mossengine\FiveCode\Parsers\Executes;
+use Mossengine\FiveCode\Parsers\Functions;
+use Mossengine\FiveCode\Parsers\Iterators;
+use Mossengine\FiveCode\Parsers\Values;
+use Mossengine\FiveCode\Parsers\Variables;
 
 /**
  * Class FiveCode
@@ -8,301 +17,627 @@ namespace Mossengine\FiveCode;
  */
 class FiveCode
 {
-    use ArrTrait;
 
     /**
-     * Internal variable used to store the execution variables
-     *
+     * @var bool
+     */
+    private $boolDebug = false;
+
+    /**
+     * @param bool|null $boolDebug
+     * @return $this|bool
+     */
+    public function isDebug(bool $boolDebug = null) {
+        if (!is_bool($boolDebug)) {
+            return $this->boolDebug;
+        }
+        $this->boolDebug = $boolDebug;
+        return $this;
+    }
+
+    /**
+     * @var array
+     */
+    private $arrayLoopTracking = [];
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intAdjustment
+     */
+    public function loopAdjust(string $stringLoopName, int $intAdjustment = 0) {
+        $this->loopSet(
+            $stringLoopName,
+            $this->loopGet($stringLoopName) + $intAdjustment
+        );
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function loopGet(string $stringLoopName, int $intDefault = 0) : int {
+        return ___::arrayGet(
+            $this->arrayLoopTracking,
+            $stringLoopName,
+            $intDefault
+        );
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intAmount
+     */
+    public function loopSet(string $stringLoopName, int $intAmount = 0) {
+        ___::arraySet(
+            $this->arrayLoopTracking,
+            $stringLoopName,
+            $intAmount
+        );
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intUp
+     */
+    public function loopUp(string $stringLoopName, int $intUp = 1) {
+        $this->loopAdjust($stringLoopName, $intUp);
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intUp
+     */
+    public function loopDown(string $stringLoopName, int $intUp = -1) {
+        $this->loopAdjust($stringLoopName, $intUp);
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intAmount
+     * @return bool
+     */
+    public function isLoopOver(string $stringLoopName, int $intAmount = 0) : bool {
+        return $this->loopGet($stringLoopName) > $intAmount;
+    }
+
+    /**
+     * @param string $stringLoopName
+     * @param int $intAmount
+     * @return bool
+     */
+    public function isLoopUnder(string $stringLoopName, int $intAmount = 0) : bool {
+        return $this->loopGet($stringLoopName) < $intAmount;
+    }
+
+    /**
+     * @var array
+     */
+    private $arrayFunctions = [];
+
+    /**
+     * @param array|null $arrayFunctionNamespace
+     * @return $this|array
+     */
+    public function functions(array $arrayFunctionNamespace = null) {
+        if (is_null($arrayFunctionNamespace)) {
+            return $this->arrayFunctions;
+        }
+        foreach ($arrayFunctionNamespace as $stringFunctionKey => $stringFunctionNamespace) {
+            $this->functionAdd($stringFunctionKey, $stringFunctionNamespace);
+        }
+        return $this;
+    }
+
+    /**
+     * @param $stringFunctionKey
+     * @param $stringFunctionNamespace
+     */
+    public function functionAdd($stringFunctionKey, $stringFunctionNamespace) {
+        if (
+            !is_callable($stringFunctionNamespace)
+        ) {
+            foreach ($stringFunctionNamespace::register() as $stringKey => $callable) {
+                $this->functionSet($stringKey, $callable);
+            }
+            $this->settingsMerge($stringFunctionNamespace::settings());
+        } else if (
+            is_string($stringFunctionKey)
+            && is_callable($stringFunctionNamespace)
+        ) {
+            $this->functionSet($stringFunctionKey, $stringFunctionNamespace);
+        }
+    }
+
+    /**
+     * @param $stringName
+     * @param $mixedCallable
+     */
+    public function functionSet($stringName, $mixedCallable) {
+        ___::arraySet($this->arrayFunctions, $stringName, $mixedCallable);
+    }
+
+    /**
+     * @param $stringName
+     * @param null $mixedDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function functionGet($stringName, $mixedDefault = null) {
+        return ___::arrayGet($this->arrayFunctions, $stringName, $mixedDefault);
+    }
+
+    /**
+     * @param $stringName
+     */
+    public function functionForget($stringName) {
+        ___::arrayForget($this->arrayFunctions, $stringName);
+    }
+
+    /**
+     * @var null
+     */
+    private $arrayFunctionsAllowed = [];
+
+    /**
+     * @param array|null $arrayFunctionsAllowed
+     * @return $this|array|null
+     */
+    public function functionsAllowed(array $arrayFunctionsAllowed = null) {
+        if (is_null($arrayFunctionsAllowed)) {
+            return $this->arrayFunctionsAllowed;
+        }
+        $this->arrayFunctionsAllowed = $arrayFunctionsAllowed;
+        return $this;
+    }
+
+    /**
+     * @param $stringFunctionName
+     * @return bool
+     */
+    public function isFunctionAllowed($stringFunctionName) : bool {
+        return true === (
+            ___::arrayGet(
+                $this->arrayFunctionsAllowed,
+                $stringFunctionName,
+                ___::arrayGet(
+                    $this->arrayFunctionsAllowed,
+                    '*',
+                    false
+                )
+            )
+        );
+    }
+
+    /**
      * @var array
      */
     private $arrayVariables = [];
 
     /**
-     * Internal array used to store the supported functions for execution, this gets populated as part of the constructor
-     *
+     * @param array|null $arrayVariables
+     * @return $this|array
+     */
+    public function variables(array $arrayVariables = null) {
+        if (is_null($arrayVariables)) {
+            return $this->arrayVariables;
+        }
+        $this->arrayVariables = $arrayVariables;
+        return $this;
+    }
+
+    /**
+     * @param $stringPath
+     * @param $mixedValue
+     * @return $this
+     */
+    public function variableSet($stringPath, $mixedValue) : self {
+        ___::arraySet($this->arrayVariables, $stringPath, $mixedValue);
+        return $this;
+    }
+
+    /**
+     * @param $stringPath
+     * @param $mixedDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function variableGet($stringPath, $mixedDefault = null) {
+        return ___::arrayGet($this->arrayVariables, $stringPath, $mixedDefault);
+    }
+
+    /**
+     * @param $stringPath
+     * @return $this
+     */
+    public function variableForget($stringPath) : self {
+        ___::arrayForget($this->arrayVariables, $stringPath);
+        return $this;
+    }
+
+    /**
+     * @var null
+     */
+    private $arrayVariablesAllowed = [];
+
+    /**
+     * @param array|null $arrayVariablesAllowed
+     * @return $this|array|null
+     */
+    public function variablesAllowed(array $arrayVariablesAllowed = null) {
+        if (is_null($arrayVariablesAllowed)) {
+            return $this->arrayVariablesAllowed;
+        }
+        $this->arrayVariablesAllowed = $arrayVariablesAllowed;
+        return $this;
+    }
+
+    /**
+     * @param string $stringVariableNameOrPath
+     * @param string $stringAction
+     * @return bool
+     */
+    public function isVariableAllowed(string $stringVariableNameOrPath, string $stringAction = '*') : bool {
+        return (
+            true === (
+                ___::arrayGet(
+                    $this->arrayVariablesAllowed,
+                    $stringVariableNameOrPath . '.' . $stringAction,
+                    ___::arrayGet(
+                        $this->arrayVariablesAllowed,
+                        $stringVariableNameOrPath,
+                        ___::arrayGet(
+                            $this->arrayVariablesAllowed,
+                            '*.' . $stringAction,
+                            ___::arrayGet(
+                                $this->arrayVariablesAllowed,
+                                '*',
+                                true
+                            )
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /**
      * @var array
      */
-    private $arraySupportedFiveCodeFunctions = [];
+    private $arrayParsers = [];
+
+    /**
+     * @param array|null $arrayParserNamespaces
+     * @return $this|array
+     */
+    public function parsers(array $arrayParserNamespaces = null) {
+        if (is_null($arrayParserNamespaces)) {
+            return $this->arrayParsers;
+        }
+        foreach ($arrayParserNamespaces as $stringParserNamespace) {
+            $this->parserAdd($stringParserNamespace);
+        }
+        return $this;
+    }
+
+    /**
+     * @param $stringParserNamespace
+     */
+    public function parserAdd($stringParserNamespace) {
+        foreach ($stringParserNamespace::register() as $stringKey => $callable) {
+            $this->parserSet($stringKey, $callable);
+        }
+        $this->settingsMerge($stringParserNamespace::settings());
+    }
+
+    /**
+     * @param $stringKey
+     * @param $callable
+     */
+    public function parserSet($stringKey, $callable) {
+        if (is_callable($callable)) {
+            ___::arraySet($this->arrayParsers, $stringKey, $callable);
+        }
+    }
+
+    /**
+     * @param $stringKey
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function parserGet($stringKey) {
+        return ___::arrayGet($this->arrayParsers, $stringKey, null);
+    }
+
+    /**
+     * @param $stringKey
+     */
+    public function parserForget($stringKey) {
+        ___::arrayForget($this->arrayParsers, $stringKey);
+    }
+
+    /**
+     * @var null
+     */
+    private $arrayParsersAllowed = [];
+
+    /**
+     * @param array|null $arrayParsersAllowed
+     * @return $this|array|null
+     */
+    public function parsersAllowed(array $arrayParsersAllowed = null) {
+        if (is_null($arrayParsersAllowed)) {
+            return $this->arrayParsersAllowed;
+        }
+        $this->arrayParsersAllowed = $arrayParsersAllowed;
+        return $this;
+    }
+
+    /**
+     * @param string $stringParserName
+     * @return bool
+     */
+    public function isParserAllowed(string $stringParserName) : bool {
+        return true === (
+            ___::arrayGet(
+                $this->arrayParsersAllowed,
+                $stringParserName,
+                ___::arrayGet(
+                    $this->arrayParsersAllowed,
+                    '*',
+                    true
+                )
+            )
+        );
+    }
+
+    /**
+     * @var array
+     */
+    private $arraySettings = [
+        '_fivecode' => [
+            'instructions' => [
+                'max' => [
+                    'iteration' => 100,
+                    'duration' => 30
+                ]
+            ],
+            'instruction' => [
+                'max' => [
+                    'iteration' => 100,
+                    'duration' => 30
+                ]
+            ],
+        ]
+    ];
+
+    /**
+     * @param array|null $arraySettings
+     * @return $this|array
+     */
+    public function settings(array $arraySettings = null) {
+        if (is_null($arraySettings)) {
+            return $this->arraySettings;
+        }
+        $this->settingsMerge($arraySettings);
+        return $this;
+    }
+
+    /**
+     * @param $stringPath
+     * @param $mixedValue
+     * @return $this
+     */
+    public function settingSet($stringPath, $mixedValue) : self {
+        ___::arraySet($this->arraySettings, $stringPath, $mixedValue);
+        return $this;
+    }
+
+    /**
+     * @param $stringPath
+     * @param $mixedDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function settingGet($stringPath, $mixedDefault = null) {
+        return ___::arrayGet($this->arraySettings, $stringPath, $mixedDefault);
+    }
+
+    /**
+     * @param $stringPath
+     * @return $this
+     */
+    public function settingForget($stringPath) : self {
+        ___::arrayForget($this->arraySettings, $stringPath);
+        return $this;
+    }
+
+    /**
+     * @param array $arraySettings
+     * @return $this
+     */
+    public function settingsMerge(array $arraySettings = []) : self {
+        $this->arraySettings = array_replace_recursive(
+            $this->arraySettings,
+            $arraySettings
+        );
+        return $this;
+    }
 
     /**
      * FiveCode constructor.
      * @param array $arrayParameters
      */
-    public function __construct($arrayParameters = []) {
-        $this->arraySupportedFiveCodeFunctions = array_merge($this->arraySupportedFiveCodeFunctions, static::array_get($arrayParameters, 'functions', []));
+    public function __construct(array $arrayParameters = []) {
+        $this
+            // Debug
+            ->isDebug(false !== ___::arrayGet($arrayParameters, 'debug', false))
+
+            // Parsers
+            ->parsers(array_merge(
+                [
+                    'values' => Values::class,
+                    'variables' => Variables::class,
+                    'conditions' => Conditions::class,
+                    'executes' => Executes::class,
+                    'iterators' => Iterators::class
+                ],
+                ___::arrayGet($arrayParameters, 'parsers.include', [])
+            ))
+            ->parsersAllowed(___::arrayGet($arrayParameters, 'parsers.allowed', []))
+
+            // Functions
+            ->functions(array_merge(
+                [
+                    'maths' => Maths::class
+                ],
+                ___::arrayGet($arrayParameters, 'functions.include', [])
+            ))
+            ->functionsAllowed(___::arrayGet($arrayParameters, 'functions.allowed', []))
+
+            // Variables
+            ->variables(___::arrayGet($arrayParameters, 'variables.include', []))
+            ->variablesAllowed(___::arrayGet($arrayParameters, 'variables.allowed', []))
+
+            // Settings
+            ->settings(___::arrayGet($arrayParameters, 'settings.include', []));
     }
 
     /**
-     * Execute the FiveCode from a JSON string
-     *
-     * @param string $stringFiveCode
+     * @param array $arrayParameters
+     * @return static
      */
-    public function executeJson($stringFiveCode = '[]') {
-        // decode the FiveCode string
-        $this->execute(json_decode($stringFiveCode, true));
+    public static function make(array $arrayParameters = []) : self {
+        return new self($arrayParameters);
     }
 
     /**
-     * Executes the FiveCode for a provided array of variables and/or instructions
-     *
-     * @param array $arrayFiveCode
-     */
-    public function execute(array $arrayFiveCode = []) {
-        // Get the variables from the FiveCode
-        $this->arrayVariables = $this->array_get($arrayFiveCode, 'variables', []);
-
-        // Execute the first layer of instructions from the FiveCode
-        $this->instructions($this->array_get($arrayFiveCode, 'instructions', []));
-    }
-
-    /**
-     * This function gets called when instructions are found at a given level within the FiveCode executed process
-     * FiveCode can have nested instructions so this can loop down many times depending on the FiveCode structure
-     *
      * @param array $arrayInstructions
+     * @return $this
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
-    private function instructions(array $arrayInstructions = []) {
-        // Process each instruction
-        foreach ($arrayInstructions as $arrayInstruction) {
-            switch ($this->array_get($arrayInstruction, 'type', null)) {
-                case 'instructions':
-                    $this->instructions($this->array_get($arrayInstruction, 'instructions', []));
-                    break;
-                case 'variables':
-                    $this->variables($this->array_get($arrayInstruction, 'variables', []));
-                    break;
-                case 'functions':
-                    $this->functions($this->array_get($arrayInstruction, 'functions', []));
-                    break;
-                case 'conditions':
-                    if (
-                        true === $this->array_get($this->conditions($this->array_get($arrayInstruction, 'conditions', [])), $this->array_get($arrayInstruction, 'validation', 'all'))
-                        && $this->array_has($arrayInstruction, 'instructions')
-                    ) {
-                        $this->instructions($this->array_get($arrayInstruction, 'instructions', []));
-                    }
-                    break;
-                case 'iterators':
-                    $this->iterators($this->array_get($arrayInstruction, 'iterators', []));
-                    break;
-            }
-        }
+    public function evaluate(array $arrayInstructions = []) : self {
+        $this->instructions($arrayInstructions);
+        return $this;
     }
 
     /**
-     * This function is used to get, set or forget a variable from within the stored execution variables
-     *
-     * @param null $name
-     * @param string $value
-     * @return mixed
+     * @param array $mixedInstructionsOrInstruction
+     * @return array|\ArrayAccess|mixed|null
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
-    public function variable($name = null, $value = 'SuperCatMonkeyHotDog') {
-        if ('SuperCatMonkeyHotDog' !== $value) {
-            if (!is_null($value)) {
-                $this->array_set($this->arrayVariables, $name, $value);
-            } else {
-                $this->array_forget($this->arrayVariables, $name);
+    public function instructions($mixedInstructionsOrInstruction = []) {
+        $this->debug('instructions', $mixedInstructionsOrInstruction);
+        $this->loopUp('instructions');
+        $mixedResult = $this->result();
+        if (
+            $this->isLoopUnder(
+                'instructions',
+                $this->settingGet('_fivecode.instructions.max.iteration')
+            )
+            // TODO: Come back and add max duration checks
+        ) {
+            foreach (
+                (
+                    !is_array($mixedInstructionsOrInstruction)
+                    || ___::arrayIsAssociative($mixedInstructionsOrInstruction)
+                        ? [$mixedInstructionsOrInstruction]
+                        : $mixedInstructionsOrInstruction
+                )
+                as $mixedInstruction
+            ) {
+                $mixedResult = $this->instruction($mixedInstruction);
             }
         }
-        return $this->array_get($this->arrayVariables, $name, null);
+        $this->loopDown('instructions');
+
+        return $this->result($mixedResult);
     }
 
     /**
-     * This function sets a variable value into the variables array either based on a specific value defined or the reference to another stored variable
-     *
-     * @param array $arrayVariables
+     * @param null $mixedDataOrArray
+     * @return array|\ArrayAccess|mixed|null
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
-    private function variables(array $arrayVariables = []) {
-        foreach ($arrayVariables as $arrayVariable) {
-            switch ($this->array_get($arrayVariable, 'type', null)) {
-                case 'variable':
-                    $this->variable($this->array_get($arrayVariable, 'variable', 'default'), $this->variable($this->array_get($arrayVariable, 'variable', 'default')));
-                    break;
-                case 'value':
-                    $this->variable($this->array_get($arrayVariable, 'variable', 'default'), $this->array_get($arrayVariable, 'value', null));
-                    break;
-            }
-        }
-    }
+    public function instruction($mixedDataOrArray = null) {
+        $this->debug('instruction', $mixedDataOrArray);
+        $mixedResult = $this->result();
+        if (!is_array($mixedDataOrArray)) {
+            $this->debug('literal', $mixedDataOrArray);
+            $mixedResult = $mixedDataOrArray;
+        } else if (!empty($mixedDataOrArray)) {
+            $this->loopUp('instruction');
+            if (!___::arrayIsAssociative($mixedDataOrArray)) {
+                $mixedResult = $this->instructions($mixedDataOrArray);
+            } else if (
+                $this->isLoopUnder(
+                    'instruction',
+                    $this->settingGet('_fivecode.instruction.max.iteration')
+                )
+                // TODO: Come back and add max duration checks
+            ) {
+                $stringInstructionType = ___::arrayFirstKey($mixedDataOrArray);
+                $mixedData = ___::arrayGet($mixedDataOrArray, $stringInstructionType, []);
 
-    /**
-     * This function is where the instructions within the FiveCode calls on one or more functions to be executed, from
-     * here it will execute the instructed function with the suggested variables either based on value or reference into
-     * a function that is part of the supported functions array. The results of the function can then be piped out to a variable or nothing to be done... more options to come.
-     *
-     * @param array $arrayFunctions
-     */
-    private function functions(array $arrayFunctions = []) {
-        foreach ($arrayFunctions as $arrayFunction) {
-            if ($this->array_has($arrayFunction, 'parameters')) {
-                $arrayParameters = array_map(
-                    function ($arrayParameter) {
-                        switch ($this->array_get($arrayParameter, 'type', null)) {
-                            case 'variable':
-                                return $this->variable($this->array_get($arrayParameter, 'variable', 'default'));
-                                break;
-                            case 'value':
-                                return $this->array_get($arrayParameter, 'value', null);
-                                break;
-                        }
-
-                        return null;
-                    },
-                    $this->array_get($arrayFunction, 'parameters', [])
-                );
-            } else {
-                $arrayParameters = [];
-            }
-
-            $result = null;
-
-            if (in_array($this->array_get($arrayFunction, 'type', null), array_keys($this->arraySupportedFiveCodeFunctions))) {
-                $result = call_user_func_array($this->array_get($this->arraySupportedFiveCodeFunctions, $this->array_get($arrayFunction, 'type', null), null), $arrayParameters);
-            }
-
-            if (!empty($result)) {
-                foreach ($this->array_get($arrayFunction, 'returns', []) as $arrayReturn) {
-                    switch ($this->array_get($arrayReturn, 'type', null)) {
-                        case 'variable':
-                            $this->variable($this->array_get($arrayReturn, 'variable', 'default'), $result);
-                            break;
-                    }
+                if (!$this->isParserAllowed($stringInstructionType)) {
+                    throw new ParserNotAllowedException($stringInstructionType);
                 }
+                if (!is_callable($parser = $this->parserGet($stringInstructionType))) {
+                    throw new ParserNotFoundException($stringInstructionType);
+                }
+
+                $this->debug($stringInstructionType . ' - data : ', $mixedData);
+
+                $mixedResult = call_user_func_array(
+                    $parser,
+                    [
+                        $this,
+                        $mixedData
+                    ]
+                );
+
+                $this->debug($stringInstructionType . ' - returned : ', $mixedResult);
             }
+            $this->loopDown('instruction');
         }
+
+        return $this->result($mixedResult);
     }
 
     /**
-     * This function gets called when the FiveCode instructions require some conditions to be met first before executing more instructions.
-     * This supports basic comparitions between two variables and/or values either referenced or defined within the instructions data.
-     *
-     * @param array $arrayConditions
-     * @return array
+     * @param string $stringMessage
+     * @param mixed $mixedData
+     * @return $this
      */
-    private function conditions(array $arrayConditions = []) {
-        $boolAll = true;
-        $boolAny = false;
-        foreach ($arrayConditions as $arrayCondition) {
-            switch ($this->array_get($arrayCondition, 'type', null)) {
-                case 'compare':
-                    switch ($this->array_get($arrayCondition, 'left.type', null)) {
-                        case 'variable':
-                            $mixedLeft = $this->variable($this->array_get($arrayCondition, 'left.variable', 'default'));
-                            break;
-                        case 'value':
-                            $mixedLeft = $this->array_get($arrayCondition, 'left.value', 'BlueBatBerryWalk' . microtime(true)); // random weird default to prevent accidental matching
-                            break;
-                    }
-                    switch ($this->array_get($arrayCondition, 'right.type', null)) {
-                        case 'variable':
-                            $mixedRight = $this->variable($this->array_get($arrayCondition, 'right.variable', 'default'));
-                            break;
-                        case 'value':
-                            $mixedRight = $this->array_get($arrayCondition, 'right.value', 'SandMouseCherryWheel' . microtime(true)); // random weird default to prevent accidental matching
-                            break;
-                    }
-                    switch ($this->array_get($arrayCondition, 'operator', null)) {
-                        case 'lt':
-                        case '<':
-                            if ($mixedLeft < $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'lte':
-                        case '<=':
-                            if ($mixedLeft <= $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'eq':
-                        case '==':
-                            if ($mixedLeft == $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'neq':
-                        case '!=':
-                            if ($mixedLeft != $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'gt':
-                        case '>':
-                            if ($mixedLeft > $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                        case 'gte':
-                        case '>=':
-                            if ($mixedLeft >= $mixedRight) {
-                                $boolAny = true;
-                            } else {
-                                $boolAll = false;
-                            }
-                            break;
-                    }
-                    break;
-            }
+    public function debug(string $stringMessage, $mixedData = '33b8b54a-fc92-4e52-97a5-80bcb83d2ce6') : self {
+        if ($this->isDebug()) {
+            echo PHP_EOL . '[' . microtime(true) . '] ' . $stringMessage . PHP_EOL
+                . (
+                    '33b8b54a-fc92-4e52-97a5-80bcb83d2ce6' !== $mixedData
+                        ? (json_encode($mixedData) . PHP_EOL)
+                        : null
+                );
         }
-        return ['all' => $boolAll, 'any' => $boolAny];
+        return $this;
     }
 
     /**
-     * This function gets called when the instructions call on an iterator of either for or each where classic iterator
-     * behaviour takes place. You can for loop by setting the start number, its limit and stepping or provide an array
-     * of things to iterate over for further execution of instructions from within the iterator loop. While iterating
-     * you can reference the index and value ( if using each ) from the normal variables design and if you need to nest
-     * multiple iterators and retain their index and/or value then you can also define an identifier that isolates the
-     * index and value away from accidental override from subsequent iterators.
-     *
-     * @param array $arrayIterators
+     * @param mixed $mixedData
+     * @return array|\ArrayAccess|mixed|null
      */
-    private function iterators(array $arrayIterators = []) {
-        foreach ($arrayIterators as $arrayIterator) {
-            $stringIdentifier = $this->array_get($arrayIterator, 'identifier', null);
-            switch ($this->array_get($arrayIterator, 'type', null)) {
-                case 'for':
-                    for (
-                        $i = $this->array_get($arrayIterator, 'start', 1);
-                        $i <= $this->array_get($arrayIterator, 'limit', 10);
-                        $i += $this->array_get($arrayIterator, 'step', 1)
-                    ) {
-                        $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'index', $i);
-                        $this->instructions($this->array_get($arrayIterator, 'instructions', []));
-                    }
-                    break;
-                case 'each':
-                    $arrayToIterate = [];
-                    switch ($this->array_get($arrayIterator, 'each', null)) {
-                        case 'variable':
-                            $arrayToIterate = $this->variable($this->array_get($arrayIterator, 'variable', 'default'));
-                            break;
-                        case 'value':
-                            $arrayToIterate = $this->array_get($arrayIterator, 'value', []);
-                            break;
-                    }
-
-                    if (is_array($arrayToIterate)) {
-                        foreach ($arrayToIterate as $mixedIterateKey => $mixedIterateValue) {
-                            $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'index', $mixedIterateKey);
-                            $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'value', $mixedIterateValue);
-                            $this->instructions($this->array_get($arrayIterator, 'instructions', []));
-                        }
-                    }
-                    break;
-            }
-            $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'index', null);
-            $this->variable('iterate.' . (!empty($stringIdentifier) ? $stringIdentifier . '.' : '') . 'value', null);
+    public function result($mixedData = '33b8b54a-fc92-4e52-97a5-80bcb83d2ce6') {
+        if ('33b8b54a-fc92-4e52-97a5-80bcb83d2ce6' !== $mixedData) {
+            $this->variableSet('_return', $mixedData);
         }
+        return $this->variableGet('_return', null);
+    }
+
+    /**
+     * @param null $mixedDefault
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public function return($mixedDefault = null) {
+        $return = $this->variableGet('_return', $mixedDefault);
+        $this->debug('_return', $return);
+        return $return;
     }
 }
