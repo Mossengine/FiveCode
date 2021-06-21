@@ -1,5 +1,7 @@
 <?php
 
+use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
+use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
 use Mossengine\FiveCode\Parsers\Tests;
 
 /**
@@ -548,6 +550,27 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
                 ]
             )
         );
+    }
+
+    public function testIfParserNotAllowedException() {
+        $this->expectException(ParserNotAllowedException::class);
+        Mossengine\FiveCode\FiveCode::make([
+            'parsers' => [
+                'allowed' => [
+                    'set' => false
+                ]
+            ]
+        ])
+            ->evaluate([
+                ['set' => ['key1', 'value1']]
+            ]);
+    }
+    public function testIfParserNotFoundException() {
+        $this->expectException(ParserNotFoundException::class);
+        Mossengine\FiveCode\FiveCode::make()
+            ->evaluate([
+                ['banana' => []]
+            ]);
     }
 
 }

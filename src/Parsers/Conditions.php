@@ -1,6 +1,5 @@
 <?php namespace Mossengine\FiveCode\Parsers;
 
-use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\FiveCode;
 use Mossengine\FiveCode\Helpers\___;
 
@@ -35,7 +34,6 @@ class Conditions extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $arrayArguments
      * @return bool|mixed|null
-     * @throws InstructionException
      */
     public static function if(FiveCode $fiveCode, array $arrayArguments = []) {
         // Run the first argument to get the conditional results ( true | false )
@@ -91,7 +89,6 @@ class Conditions extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $mixedStatementsOrStatement
      * @return array|\ArrayAccess|false|mixed|null
-     * @throws InstructionException
      */
     public static function all(FiveCode $fiveCode, array $mixedStatementsOrStatement = []) {
         $mixedResult = $fiveCode->result();
@@ -123,7 +120,6 @@ class Conditions extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param mixed $mixedStatementsOrStatement
      * @return array|\ArrayAccess|false|mixed|null
-     * @throws InstructionException
      */
     public static function any(FiveCode $fiveCode, $mixedStatementsOrStatement = []) {
         $mixedResult = $fiveCode->result();
@@ -156,9 +152,8 @@ class Conditions extends ParsersAbstract {
      * @param array $arrayData
      * @param string $stringStatementType
      * @return bool
-     * @throws InstructionException
      */
-    public static function statement(FiveCode $fiveCode, array $arrayData, string $stringStatementType) {
+    public static function statement(FiveCode $fiveCode, array $arrayData, string $stringStatementType) : bool {
         // Get the arguments
         $arrayArguments = array_map(
             function ($arrayArgument) use ($fiveCode) {

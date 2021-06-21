@@ -1,6 +1,7 @@
 <?php namespace Mossengine\FiveCode;
 
-use Mossengine\FiveCode\Exceptions\InstructionException;
+use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
+use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
 use Mossengine\FiveCode\Functions\Maths;
 use Mossengine\FiveCode\Helpers\___;
 use Mossengine\FiveCode\Parsers\Conditions;
@@ -509,7 +510,8 @@ class FiveCode
     /**
      * @param array $arrayInstructions
      * @return $this
-     * @throws InstructionException
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
     public function evaluate(array $arrayInstructions = []) : self {
         $this->instructions($arrayInstructions);
@@ -517,9 +519,10 @@ class FiveCode
     }
 
     /**
-     * @param mixed $mixedInstructionsOrInstruction
-     * @return false|mixed|null
-     * @throws InstructionException
+     * @param array $mixedInstructionsOrInstruction
+     * @return array|\ArrayAccess|mixed|null
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
     public function instructions($mixedInstructionsOrInstruction = []) {
         $this->debug('instructions', $mixedInstructionsOrInstruction);
@@ -550,9 +553,10 @@ class FiveCode
     }
 
     /**
-     * @param mixed $mixedDataOrArray
-     * @return false|mixed|null
-     * @throws InstructionException
+     * @param null $mixedDataOrArray
+     * @return array|\ArrayAccess|mixed|null
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
     public function instruction($mixedDataOrArray = null) {
         $this->debug('instruction', $mixedDataOrArray);
@@ -575,10 +579,10 @@ class FiveCode
                 $mixedData = ___::arrayGet($mixedDataOrArray, $stringInstructionType, []);
 
                 if (!$this->isParserAllowed($stringInstructionType)) {
-                    throw new InstructionException('Disabled parser : ' . $stringInstructionType);
+                    throw new ParserNotAllowedException($stringInstructionType);
                 }
                 if (!is_callable($parser = $this->parserGet($stringInstructionType))) {
-                    throw new InstructionException('Invalid parser : ' . $stringInstructionType);
+                    throw new ParserNotFoundException($stringInstructionType);
                 }
 
                 $this->debug($stringInstructionType . ' - data : ', $mixedData);

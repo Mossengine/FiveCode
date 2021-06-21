@@ -1,6 +1,5 @@
 <?php namespace Mossengine\FiveCode\Parsers;
 
-use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\FiveCode;
 
 /**
@@ -32,7 +31,6 @@ class Values extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $mixedData
      * @return array|\ArrayAccess|mixed|null
-     * @throws InstructionException
      */
     public static function array(FiveCode $fiveCode, array $mixedData = []) {
         return $fiveCode->result(array_map(

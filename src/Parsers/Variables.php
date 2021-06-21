@@ -1,6 +1,7 @@
 <?php namespace Mossengine\FiveCode\Parsers;
 
-use Mossengine\FiveCode\Exceptions\InstructionException;
+use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
+use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
 use Mossengine\FiveCode\FiveCode;
 use Mossengine\FiveCode\Helpers\___;
 
@@ -25,7 +26,8 @@ class Variables extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $mixedData
      * @return array|\ArrayAccess|mixed|null
-     * @throws InstructionException
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
     public static function set(FiveCode $fiveCode, array $mixedData = []) {
         if (
@@ -46,7 +48,8 @@ class Variables extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $mixedData
      * @return array|\ArrayAccess|mixed|null
-     * @throws InstructionException
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
     public static function get(FiveCode $fiveCode, array $mixedData = []) {
         $mixedResult = $fiveCode->result();

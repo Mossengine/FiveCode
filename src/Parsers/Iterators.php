@@ -1,6 +1,5 @@
 <?php namespace Mossengine\FiveCode\Parsers;
 
-use Mossengine\FiveCode\Exceptions\InstructionException;
 use Mossengine\FiveCode\FiveCode;
 use Mossengine\FiveCode\Helpers\___;
 
@@ -60,7 +59,6 @@ class Iterators extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $arrayArguments
      * @return array|\ArrayAccess|false|mixed|null
-     * @throws InstructionException
      */
     public static function for(FiveCode $fiveCode, array $arrayArguments = []) {
         $mixedResult = $fiveCode->result();
@@ -130,7 +128,6 @@ class Iterators extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $arrayArguments
      * @return array|\ArrayAccess|false|mixed|null
-     * @throws InstructionException
      */
     public static function each(FiveCode $fiveCode, array $arrayArguments = []) {
         $mixedResult = $fiveCode->result();
@@ -167,7 +164,6 @@ class Iterators extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $arrayArguments
      * @return false|mixed|null
-     * @throws InstructionException
      */
     public static function do(FiveCode $fiveCode, array $arrayArguments = []) {
         do {
@@ -196,7 +192,6 @@ class Iterators extends ParsersAbstract {
      * @param FiveCode $fiveCode
      * @param array $arrayArguments
      * @return array|\ArrayAccess|mixed|null
-     * @throws InstructionException
      */
     public static function while(FiveCode $fiveCode, array $arrayArguments = []) {
         while (
