@@ -16,7 +16,8 @@ class TestsTest extends PHPUnit_Framework_TestCase
                     'include' => [
                         'tests' => Tests::class
                     ]
-                ]
+                ],
+                'debug' => true
             ])
                 ->evaluate([
                     ['test1' => 'abc']
