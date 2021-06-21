@@ -17,9 +17,6 @@ use Mossengine\FiveCode\Parsers\Variables;
 class FiveCode
 {
 
-    const LOOP_INSTRUCTIONS_LIMIT = 100;
-    const LOOP_INSTRUCTION_LIMIT = 100;
-
     /**
      * @var bool
      */
@@ -307,10 +304,13 @@ class FiveCode
     private $arrayParsers = [];
 
     /**
-     * @param array $arrayParserNamespaces
-     * @return $this
+     * @param array|null $arrayParserNamespaces
+     * @return $this|array
      */
-    public function parsers(array $arrayParserNamespaces = []) : self {
+    public function parsers(array $arrayParserNamespaces = null) {
+        if (is_null($arrayParserNamespaces)) {
+            return $this->arrayParsers;
+        }
         foreach ($arrayParserNamespaces as $stringParserNamespace) {
             $this->parserAdd($stringParserNamespace);
         }

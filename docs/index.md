@@ -2,12 +2,12 @@
 
 ## Index
 
-- [Installation](/installation.md)
-- [Usage](/usage.md)
-- [Basics - FiveCode](/basics.md)
-- [Settings](/settings.md)
-- [Values](/values.md)
-- [Variables](/variables.md)
-- [Executes](/executes.md)
-- [Conditions](/conditions.md)
-- [Iterators](/iterators.md)
+- [Installation](/docs/installation.md)
+- [Usage](/docs/usage.md)
+- [Basics - FiveCode](/docs/basics.md)
+- [Settings](/docs/settings.md)
+- [Values](/docs/values.md)
+- [Variables](/docs/variables.md)
+- [Executes](/docs/executes.md)
+- [Conditions](/docs/conditions.md)
+- [Iterators](/docs/iterators.md)

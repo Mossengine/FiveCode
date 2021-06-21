@@ -55,9 +55,6 @@ class ConstructionTest extends PHPUnit_Framework_TestCase
             ]
         ]);
 
-        $fiveCode->debug('exercise for coverage with data', ['some' => 'data']);
-        $fiveCode->debug('exercise for coverage without data');
-
         $this->assertEquals(
             [
                 'a' => function() { return 'A'; }
