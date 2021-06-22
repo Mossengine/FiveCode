@@ -1,6 +1,9 @@
 <?php namespace Mossengine\FiveCode\Parsers;
 
+use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
+use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
 use Mossengine\FiveCode\FiveCode;
+use Mossengine\FiveCode\Helpers\___;
 
 /**
  * Class Executes
@@ -13,6 +16,7 @@ class Executes extends ParsersAbstract {
      */
     public static function register() : array {
         return [
+            'define' => function($fiveCode, $arrayData) { return self::define($fiveCode, $arrayData); },
             'call' => function($fiveCode, $arrayData) { return self::call($fiveCode, $arrayData); }
         ];
     }
@@ -20,7 +24,28 @@ class Executes extends ParsersAbstract {
     /**
      * @param FiveCode $fiveCode
      * @param array $arrayArguments
-     * @return array|\ArrayAccess|false|mixed|null
+     * @return array|\ArrayAccess|mixed|null
+     */
+    public static function define(FiveCode $fiveCode, array $arrayArguments = []) {
+        if (
+            count($arrayArguments) > 0
+            && !empty($stringFunctionName = ___::arrayGet($arrayArguments, 0, null))
+        ) {
+            $fiveCode->functionSet(
+                $stringFunctionName,
+                ___::arrayGet($arrayArguments, 1, null)
+            );
+        }
+
+        return $fiveCode->result();
+    }
+
+    /**
+     * @param FiveCode $fiveCode
+     * @param array $arrayArguments
+     * @return array|\ArrayAccess|mixed|null
+     * @throws ParserNotAllowedException
+     * @throws ParserNotFoundException
      */
     public static function call(FiveCode $fiveCode, array $arrayArguments = []) {
         $mixedResult = $fiveCode->result();
@@ -36,28 +61,42 @@ class Executes extends ParsersAbstract {
         if (
             count($arrayArguments) > 0
             && !empty($stringFunctionName = array_shift($arrayArguments))
-            && $fiveCode->isFunctionAllowed($stringFunctionName)
         ) {
+            $mixedCallableOrDefined = $fiveCode->functionGet($stringFunctionName, null);
+
             if (
-                is_callable(
-                    $callable = $fiveCode->functionGet($stringFunctionName, null)
-                )
+                is_array($mixedCallableOrDefined)
             ) {
-                $mixedResult = call_user_func_array(
-                    $callable,
-                    [
-                        $fiveCode,
-                        $arrayArguments
-                    ]
-                );
+                $mixedResult = FiveCode::make([
+                    'variables' => [
+                        'include' => [
+                            '_arguments' => $arrayArguments
+                        ]
+                    ],
+                    'debug' => true
+                ])
+                    ->evaluate($mixedCallableOrDefined)
+                    ->return();
             } else if (
-                function_exists($stringFunctionName)
+                $fiveCode->isFunctionAllowed($stringFunctionName)
             ) {
-                // Call the function to get the results
-                $mixedResult = call_user_func_array(
-                    $stringFunctionName,
-                    $arrayArguments
-                );
+                if (is_callable($mixedCallableOrDefined)) {
+                    $mixedResult = call_user_func_array(
+                        $mixedCallableOrDefined,
+                        [
+                            $fiveCode,
+                            $arrayArguments
+                        ]
+                    );
+                } else if (function_exists($stringFunctionName)) {
+                    // Call the function to get the results
+                    $mixedResult = call_user_func_array(
+                        $stringFunctionName,
+                        $arrayArguments
+                    );
+                } else {
+                    $mixedResult = null;
+                }
             } else {
                 $mixedResult = null;
             }

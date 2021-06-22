@@ -65,4 +65,27 @@ class ExecutesTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testCanDefineThenCall() {
+        $this->assertEquals(
+            55,
+            Mossengine\FiveCode\FiveCode::make()
+                ->evaluate([
+                    ['define' => [
+                        'definedFunction',
+                        [
+                            ['get' => [
+                                '_arguments.0',
+                                null
+                            ]]
+                        ]
+                    ]],
+                    ['call' => [
+                        'definedFunction',
+                        [55]
+                    ]]
+                ])
+                ->return(0)
+        );
+    }
+
 }
