@@ -5,14 +5,14 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/mossengine/fivecode"><img src="https://img.shields.io/badge/source-mossengine/fivecode-blue.svg?style=flat-square" alt="Source Code"></a>
-    <a href="https://packagist.org/packages/mossengine/fivecode"><img src="https://img.shields.io/packagist/v/mossengine/fivecode.svg?style=flat-square&label=release" alt="Download Package"></a>
-    <a href="https://php.net"><img src="https://img.shields.io/packagist/php-v/mossengine/fivecode.svg?style=flat-square&colorB=%238892BF" alt="PHP Programming Language"></a>
-    <img src="https://img.shields.io/circleci/build/github/Mossengine/FiveCode/master?label=CI&logo=travis&style=flat-square" alt="Build Status">
-    <a href="https://codecov.io/github/mossengine/fivecode"><img src="https://img.shields.io/codecov/c/gh/mossengine/fivecode/master?label=codecov&logo=codecov&style=flat-square" alt="Codecov Code Coverage"></a>
-    <a href="https://github.com/mossengine/fivecode/blob/master/LICENSE"><img src="https://img.shields.io/packagist/l/mossengine/fivecode.svg?style=flat-square&colorB=darkcyan" alt="Read License"></a>
-    <a href="https://packagist.org/packages/mossengine/fivecode/stats"><img src="https://img.shields.io/packagist/dt/mossengine/fivecode.svg?style=flat-square&colorB=darkmagenta" alt="Package downloads on Packagist"></a>
-    <a href="https://phpc.chat/channel/brenmoss"><img src="https://img.shields.io/badge/phpc.chat-%23brenmoss-darkslateblue?style=flat-square" alt="Chat with the maintainers"></a>
+    <a href="https://github.com/mossengine/fivecode"><img src="https://badgen.net/packagist/name/Mossengine/FiveCode" alt="Source Code"></a>
+    <a href="https://packagist.org/packages/mossengine/fivecode"><img src="https://badgen.net/packagist/v/Mossengine/FiveCode" alt="Download Package"></a>
+    <a href="https://php.net"><img src="https://badgen.net/packagist/php/Mossengine/FiveCode" alt="PHP Programming Language"></a>
+    <img src="https://badgen.net/circleci/github/Mossengine/FiveCode/master?icon=circleci" alt="Build Status">
+    <a href="https://codecov.io/github/mossengine/fivecode"><img src="https://badgen.net/codecov/c/github/Mossengine/FiveCode/master?icon=codecov" alt="Codecov Code Coverage"></a>
+    <a href="https://github.com/mossengine/fivecode/blob/master/LICENSE"><img src="https://badgen.net/packagist/license/Mossengine/FiveCode" alt="Read License"></a>
+    <a href="https://packagist.org/packages/mossengine/fivecode/stats"><img src="https://badgen.net/packagist/dt/Mossengine/FiveCode" alt="Package downloads on Packagist"></a>
+    <a href="https://phpc.chat/channel/brenmoss"><img src="https://badgen.net/badge/phpc.chat/brenmoss/blue" alt="Chat with the maintainers"></a>
 </p>
 
 
