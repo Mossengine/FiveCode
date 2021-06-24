@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "af3f99af5ea90e7756239740d045d231",
+    "content-hash": "a8d89a0f8d8ea2a0f35aa54f09e9fe50",
     "packages": [
         {
             "name": "doctrine/inflector",
@@ -247,6 +247,57 @@
                 }
             ],
             "time": "2020-04-07T20:44:10+00:00"
+        },
+        {
+            "name": "mossengine/helper",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Mossengine/Helper.git",
+                "reference": "fbe6b378421d67fe0e29a57bb977db42c09c846d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Mossengine/Helper/zipball/fbe6b378421d67fe0e29a57bb977db42c09c846d",
+                "reference": "fbe6b378421d67fe0e29a57bb977db42c09c846d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "illuminate/support": "^5.2.32",
+                "php": ">=7.0",
+                "ramsey/uuid": "^3.4.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "~2",
+                "phpunit/phpunit": "~4.0 || ~5.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Mossengine\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brendon Moss",
+                    "email": "brenmoss@mossengine.com"
+                }
+            ],
+            "description": "PHP Class that streamlines usages of static method helpers without needing to load in or define all the helper classes",
+            "homepage": "https://github.com/Mossengine/helper",
+            "keywords": [
+                "helpers"
+            ],
+            "support": {
+                "issues": "https://github.com/Mossengine/helper/issues",
+                "source": "https://github.com/Mossengine/helper"
+            },
+            "time": "2021-06-24T11:29:54+00:00"
         },
         {
             "name": "nesbot/carbon",

@@ -1,7 +1,7 @@
 <?php namespace Mossengine\FiveCode\Parsers;
 
 use Mossengine\FiveCode\FiveCode;
-use Mossengine\FiveCode\Helpers\___;
+use Mossengine\Helper;
 
 /**
  * Class Iterators
@@ -68,7 +68,7 @@ class Iterators extends ParsersAbstract {
             function ($arrayArgument) use ($fiveCode) {
                 return $fiveCode->instructions($arrayArgument);
             },
-            (array) ___::arrayGet($arrayArguments, 0, [])
+            (array) Helper::Arrays()::get($arrayArguments, 0, [])
         );
 
         $intStart = 0;
@@ -113,7 +113,7 @@ class Iterators extends ParsersAbstract {
                 )
             ) {
                 $mixedResult = $fiveCode->instructions(
-                    ___::arrayGet($arrayArguments, 1, null)
+                    Helper::Arrays()::get($arrayArguments, 1, null)
                 );
             }
         }
@@ -134,7 +134,7 @@ class Iterators extends ParsersAbstract {
 
         foreach (
             (array) $fiveCode->instructions(
-                ___::arrayGet($arrayArguments, 0, [])
+                Helper::Arrays()::get($arrayArguments, 0, [])
             )
             as $index => $item
         ) {
@@ -148,7 +148,7 @@ class Iterators extends ParsersAbstract {
                 )
             ) {
                 $mixedResult = $fiveCode->instructions(
-                    ___::arrayGet($arrayArguments, 1, null)
+                    Helper::Arrays()::get($arrayArguments, 1, null)
                 );
             }
         }
@@ -170,7 +170,7 @@ class Iterators extends ParsersAbstract {
             $fiveCode->loopUp('do');
             $fiveCode->variableSet('_iterator.do.iteration', $fiveCode->loopGet('do'));
             $mixedResult = $fiveCode->instructions(
-                ___::arrayGet($arrayArguments, 0, null)
+                Helper::Arrays()::get($arrayArguments, 0, null)
             );
         } while (
             $fiveCode->isLoopUnder(
@@ -178,7 +178,7 @@ class Iterators extends ParsersAbstract {
                 $fiveCode->settingGet('_iterators.do.max.iteration')
             )
             && $fiveCode->instructions(
-                ___::arrayGet($arrayArguments, 1, false)
+                Helper::Arrays()::get($arrayArguments, 1, false)
             )
         );
 
@@ -200,13 +200,13 @@ class Iterators extends ParsersAbstract {
                 $fiveCode->settingGet('_iterators.while.max.iteration')
             )
             && $fiveCode->instructions(
-                ___::arrayGet($arrayArguments, 0, false)
+                Helper::Arrays()::get($arrayArguments, 0, false)
             )
         ) {
             $fiveCode->loopUp('while');
             $fiveCode->variableSet('_iterator.while.iteration', $fiveCode->loopGet('while'));
             $mixedResult = $fiveCode->instructions(
-                ___::arrayGet($arrayArguments, 1, null)
+                Helper::Arrays()::get($arrayArguments, 1, null)
             );
         };
 

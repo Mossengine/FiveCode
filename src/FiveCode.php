@@ -3,12 +3,12 @@
 use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
 use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
 use Mossengine\FiveCode\Functions\Maths;
-use Mossengine\FiveCode\Helpers\___;
 use Mossengine\FiveCode\Parsers\Conditions;
 use Mossengine\FiveCode\Parsers\Executes;
 use Mossengine\FiveCode\Parsers\Iterators;
 use Mossengine\FiveCode\Parsers\Values;
 use Mossengine\FiveCode\Parsers\Variables;
+use Mossengine\Helper;
 
 /**
  * Class FiveCode
@@ -56,7 +56,7 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      */
     public function loopGet(string $stringLoopName, int $intDefault = 0) : int {
-        return ___::arrayGet(
+        return Helper::Arrays()::get(
             $this->arrayLoopTracking,
             $stringLoopName,
             $intDefault
@@ -68,7 +68,7 @@ class FiveCode
      * @param int $intAmount
      */
     public function loopSet(string $stringLoopName, int $intAmount = 0) {
-        ___::arraySet(
+        Helper::Arrays()::set(
             $this->arrayLoopTracking,
             $stringLoopName,
             $intAmount
@@ -153,7 +153,7 @@ class FiveCode
      * @param $mixedCallable
      */
     public function functionSet($stringName, $mixedCallable) {
-        ___::arraySet($this->arrayFunctions, $stringName, $mixedCallable);
+        Helper::Arrays()::set($this->arrayFunctions, $stringName, $mixedCallable);
     }
 
     /**
@@ -162,14 +162,14 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      */
     public function functionGet($stringName, $mixedDefault = null) {
-        return ___::arrayGet($this->arrayFunctions, $stringName, $mixedDefault);
+        return Helper::Arrays()::get($this->arrayFunctions, $stringName, $mixedDefault);
     }
 
     /**
      * @param $stringName
      */
     public function functionForget($stringName) {
-        ___::arrayForget($this->arrayFunctions, $stringName);
+        Helper::Arrays()::forget($this->arrayFunctions, $stringName);
     }
 
     /**
@@ -195,10 +195,10 @@ class FiveCode
      */
     public function isFunctionAllowed($stringFunctionName) : bool {
         return true === (
-            ___::arrayGet(
+            Helper::Arrays()::get(
                 $this->arrayFunctionsAllowed,
                 $stringFunctionName,
-                ___::arrayGet(
+                Helper::Arrays()::get(
                     $this->arrayFunctionsAllowed,
                     '*',
                     false
@@ -230,7 +230,7 @@ class FiveCode
      * @return $this
      */
     public function variableSet($stringPath, $mixedValue) : self {
-        ___::arraySet($this->arrayVariables, $stringPath, $mixedValue);
+        Helper::Arrays()::set($this->arrayVariables, $stringPath, $mixedValue);
         return $this;
     }
 
@@ -240,7 +240,7 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      */
     public function variableGet($stringPath, $mixedDefault = null) {
-        return ___::arrayGet($this->arrayVariables, $stringPath, $mixedDefault);
+        return Helper::Arrays()::get($this->arrayVariables, $stringPath, $mixedDefault);
     }
 
     /**
@@ -248,7 +248,7 @@ class FiveCode
      * @return $this
      */
     public function variableForget($stringPath) : self {
-        ___::arrayForget($this->arrayVariables, $stringPath);
+        Helper::Arrays()::forget($this->arrayVariables, $stringPath);
         return $this;
     }
 
@@ -277,16 +277,16 @@ class FiveCode
     public function isVariableAllowed(string $stringVariableNameOrPath, string $stringAction = '*') : bool {
         return (
             true === (
-                ___::arrayGet(
+                Helper::Arrays()::get(
                     $this->arrayVariablesAllowed,
                     $stringVariableNameOrPath . '.' . $stringAction,
-                    ___::arrayGet(
+                    Helper::Arrays()::get(
                         $this->arrayVariablesAllowed,
                         $stringVariableNameOrPath,
-                        ___::arrayGet(
+                        Helper::Arrays()::get(
                             $this->arrayVariablesAllowed,
                             '*.' . $stringAction,
-                            ___::arrayGet(
+                            Helper::Arrays()::get(
                                 $this->arrayVariablesAllowed,
                                 '*',
                                 true
@@ -333,7 +333,7 @@ class FiveCode
      */
     public function parserSet($stringKey, $callable) {
         if (is_callable($callable)) {
-            ___::arraySet($this->arrayParsers, $stringKey, $callable);
+            Helper::Arrays()::set($this->arrayParsers, $stringKey, $callable);
         }
     }
 
@@ -342,14 +342,14 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      */
     public function parserGet($stringKey) {
-        return ___::arrayGet($this->arrayParsers, $stringKey, null);
+        return Helper::Arrays()::get($this->arrayParsers, $stringKey, null);
     }
 
     /**
      * @param $stringKey
      */
     public function parserForget($stringKey) {
-        ___::arrayForget($this->arrayParsers, $stringKey);
+        Helper::Arrays()::forget($this->arrayParsers, $stringKey);
     }
 
     /**
@@ -375,10 +375,10 @@ class FiveCode
      */
     public function isParserAllowed(string $stringParserName) : bool {
         return true === (
-            ___::arrayGet(
+            Helper::Arrays()::get(
                 $this->arrayParsersAllowed,
                 $stringParserName,
-                ___::arrayGet(
+                Helper::Arrays()::get(
                     $this->arrayParsersAllowed,
                     '*',
                     true
@@ -425,7 +425,7 @@ class FiveCode
      * @return $this
      */
     public function settingSet($stringPath, $mixedValue) : self {
-        ___::arraySet($this->arraySettings, $stringPath, $mixedValue);
+        Helper::Arrays()::set($this->arraySettings, $stringPath, $mixedValue);
         return $this;
     }
 
@@ -435,7 +435,7 @@ class FiveCode
      * @return array|\ArrayAccess|mixed|null
      */
     public function settingGet($stringPath, $mixedDefault = null) {
-        return ___::arrayGet($this->arraySettings, $stringPath, $mixedDefault);
+        return Helper::Arrays()::get($this->arraySettings, $stringPath, $mixedDefault);
     }
 
     /**
@@ -443,7 +443,7 @@ class FiveCode
      * @return $this
      */
     public function settingForget($stringPath) : self {
-        ___::arrayForget($this->arraySettings, $stringPath);
+        Helper::Arrays()::forget($this->arraySettings, $stringPath);
         return $this;
     }
 
@@ -466,7 +466,7 @@ class FiveCode
     public function __construct(array $arrayParameters = []) {
         $this
             // Debug
-            ->isDebug(false !== ___::arrayGet($arrayParameters, 'debug', false))
+            ->isDebug(false !== Helper::Arrays()::get($arrayParameters, 'debug', false))
 
             // Parsers
             ->parsers(array_merge(
@@ -477,25 +477,25 @@ class FiveCode
                     'executes' => Executes::class,
                     'iterators' => Iterators::class
                 ],
-                ___::arrayGet($arrayParameters, 'parsers.include', [])
+                Helper::Arrays()::get($arrayParameters, 'parsers.include', [])
             ))
-            ->parsersAllowed(___::arrayGet($arrayParameters, 'parsers.allowed', []))
+            ->parsersAllowed(Helper::Arrays()::get($arrayParameters, 'parsers.allowed', []))
 
             // Functions
             ->functions(array_merge(
                 [
                     'maths' => Maths::class
                 ],
-                ___::arrayGet($arrayParameters, 'functions.include', [])
+                Helper::Arrays()::get($arrayParameters, 'functions.include', [])
             ))
-            ->functionsAllowed(___::arrayGet($arrayParameters, 'functions.allowed', []))
+            ->functionsAllowed(Helper::Arrays()::get($arrayParameters, 'functions.allowed', []))
 
             // Variables
-            ->variables(___::arrayGet($arrayParameters, 'variables.include', []))
-            ->variablesAllowed(___::arrayGet($arrayParameters, 'variables.allowed', []))
+            ->variables(Helper::Arrays()::get($arrayParameters, 'variables.include', []))
+            ->variablesAllowed(Helper::Arrays()::get($arrayParameters, 'variables.allowed', []))
 
             // Settings
-            ->settings(___::arrayGet($arrayParameters, 'settings.include', []));
+            ->settings(Helper::Arrays()::get($arrayParameters, 'settings.include', []));
     }
 
     /**
@@ -537,7 +537,7 @@ class FiveCode
             foreach (
                 (
                     !is_array($mixedInstructionsOrInstruction)
-                    || ___::arrayIsAssociative($mixedInstructionsOrInstruction)
+                    || Helper::Arrays()::isAssociative($mixedInstructionsOrInstruction)
                         ? [$mixedInstructionsOrInstruction]
                         : $mixedInstructionsOrInstruction
                 )
@@ -565,7 +565,7 @@ class FiveCode
             $mixedResult = $mixedDataOrArray;
         } else if (!empty($mixedDataOrArray)) {
             $this->loopUp('instruction');
-            if (!___::arrayIsAssociative($mixedDataOrArray)) {
+            if (!Helper::Arrays()::isAssociative($mixedDataOrArray)) {
                 $mixedResult = $this->instructions($mixedDataOrArray);
             } else if (
                 $this->isLoopUnder(
@@ -574,8 +574,8 @@ class FiveCode
                 )
                 // TODO: Come back and add max duration checks
             ) {
-                $stringInstructionType = ___::arrayFirstKey($mixedDataOrArray);
-                $mixedData = ___::arrayGet($mixedDataOrArray, $stringInstructionType, []);
+                $stringInstructionType = Helper::Arrays()::firstKey($mixedDataOrArray);
+                $mixedData = Helper::Arrays()::get($mixedDataOrArray, $stringInstructionType, []);
 
                 if (!$this->isParserAllowed($stringInstructionType)) {
                     throw new ParserNotAllowedException($stringInstructionType);

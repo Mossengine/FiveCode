@@ -3,7 +3,7 @@
 use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
 use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
 use Mossengine\FiveCode\FiveCode;
-use Mossengine\FiveCode\Helpers\___;
+use Mossengine\Helper;
 
 /**
  * Class Executes
@@ -29,11 +29,11 @@ class Executes extends ParsersAbstract {
     public static function define(FiveCode $fiveCode, array $arrayArguments = []) {
         if (
             count($arrayArguments) > 0
-            && !empty($stringFunctionName = ___::arrayGet($arrayArguments, 0, null))
+            && !empty($stringFunctionName = Helper::Arrays()::get($arrayArguments, 0, null))
         ) {
             $fiveCode->functionSet(
                 $stringFunctionName,
-                ___::arrayGet($arrayArguments, 1, null)
+                Helper::Arrays()::get($arrayArguments, 1, null)
             );
         }
 

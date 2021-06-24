@@ -26,9 +26,10 @@
   ],
   "require": {
     "php": ">=7.0",
-    "ramsey/uuid": "^3.4.1",
+    "ext-json": "*",
     "illuminate/support": "^5.2.32",
-    "ext-json": "*"
+    "mossengine/helper": "^1.0",
+    "ramsey/uuid": "^3.4.1"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "~2",

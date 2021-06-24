@@ -1,6 +1,6 @@
 <?php namespace Mossengine\FiveCode\Functions;
 
-use Mossengine\FiveCode\Helpers\___;
+use Mossengine\Helper;
 
 /**
  * Class Maths
@@ -75,8 +75,8 @@ class Maths extends FunctionsAbstract {
      */
     public static function random(array $mixedData = []) {
         return mt_rand(
-            ___::arrayGet($mixedData, 0, 0),
-            ___::arrayGet($mixedData, 1, 1)
+            Helper::Arrays()::get($mixedData, 0, 0),
+            Helper::Arrays()::get($mixedData, 1, 1)
         );
     }
 
