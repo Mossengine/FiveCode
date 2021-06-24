@@ -6,13 +6,12 @@
 
 <p align="center">
     <a href="https://github.com/mossengine/fivecode"><img src="https://badgen.net/packagist/name/Mossengine/FiveCode" alt="Source Code"></a>
-    <a href="https://packagist.org/packages/mossengine/fivecode"><img src="https://badgen.net/packagist/v/Mossengine/FiveCode" alt="Download Package"></a>
+    <a href="https://packagist.org/packages/mossengine/fivecode"><img src="https://badgen.net/packagist/v/Mossengine/FiveCode?label=version" alt="Download Package"></a>
     <a href="https://php.net"><img src="https://badgen.net/packagist/php/Mossengine/FiveCode" alt="PHP Programming Language"></a>
     <img src="https://badgen.net/circleci/github/Mossengine/FiveCode/master?icon=circleci" alt="Build Status">
     <a href="https://codecov.io/github/mossengine/fivecode"><img src="https://badgen.net/codecov/c/github/Mossengine/FiveCode/master?icon=codecov" alt="Codecov Code Coverage"></a>
     <a href="https://github.com/mossengine/fivecode/blob/master/LICENSE"><img src="https://badgen.net/packagist/license/Mossengine/FiveCode" alt="Read License"></a>
     <a href="https://packagist.org/packages/mossengine/fivecode/stats"><img src="https://badgen.net/packagist/dt/Mossengine/FiveCode" alt="Package downloads on Packagist"></a>
-    <a href="https://phpc.chat/channel/brenmoss"><img src="https://badgen.net/badge/phpc.chat/brenmoss/blue" alt="Chat with the maintainers"></a>
 </p>
 
 
@@ -25,7 +24,7 @@ $ composer require mossengine/fivecode
 ```json
 {
     "require": {
-        "mossengine/fivecode": "~1.0.0"
+        "mossengine/fivecode": "~2.0.0"
     }
 }
 ```
