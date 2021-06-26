@@ -29,11 +29,11 @@ class Executes extends ParsersAbstract {
     public static function define(FiveCode $fiveCode, array $arrayArguments = []) {
         if (
             count($arrayArguments) > 0
-            && !empty($stringFunctionName = Helper::Arrays()::get($arrayArguments, 0, null))
+            && !empty($stringFunctionName = Helper::Array()->Get($arrayArguments, 0, null))
         ) {
             $fiveCode->functionSet(
                 $stringFunctionName,
-                Helper::Arrays()::get($arrayArguments, 1, null)
+                Helper::Array()->Get($arrayArguments, 1, null)
             );
         }
 

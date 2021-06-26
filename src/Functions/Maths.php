@@ -75,8 +75,8 @@ class Maths extends FunctionsAbstract {
      */
     public static function random(array $mixedData = []) {
         return mt_rand(
-            Helper::Arrays()::get($mixedData, 0, 0),
-            Helper::Arrays()::get($mixedData, 1, 1)
+            Helper::Array()->Get($mixedData, 0, 0),
+            Helper::Array()->Get($mixedData, 1, 1)
         );
     }
 

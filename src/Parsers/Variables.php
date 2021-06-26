@@ -32,12 +32,12 @@ class Variables extends ParsersAbstract {
     public static function set(FiveCode $fiveCode, array $mixedData = []) {
         if (
             !empty($mixedData)
-            && is_string($stringKey = Helper::Arrays()::get($mixedData, 0, null))
+            && is_string($stringKey = Helper::Array()->Get($mixedData, 0, null))
             && $fiveCode->isVariableAllowed($stringKey, 'set')
         ) {
             $fiveCode->variableSet(
                 $stringKey,
-                $fiveCode->instructions(Helper::Arrays()::get($mixedData, 1, null))
+                $fiveCode->instructions(Helper::Array()->Get($mixedData, 1, null))
             );
         }
 
@@ -55,12 +55,12 @@ class Variables extends ParsersAbstract {
         $mixedResult = $fiveCode->result();
         if (
             !empty($mixedData)
-            && is_string($stringKey = Helper::Arrays()::get($mixedData, 0, null))
+            && is_string($stringKey = Helper::Array()->Get($mixedData, 0, null))
             && $fiveCode->isVariableAllowed($stringKey, 'get')
         ) {
             $mixedResult = $fiveCode->variableGet(
                 $stringKey,
-                $fiveCode->instructions(Helper::Arrays()::get($mixedData, 1, null))
+                $fiveCode->instructions(Helper::Array()->Get($mixedData, 1, null))
             );
         }
 
@@ -75,7 +75,7 @@ class Variables extends ParsersAbstract {
     public static function forget(FiveCode $fiveCode, array $mixedData = []) {
         if (
             !empty($mixedData)
-            && is_string($stringKey = Helper::Arrays()::get($mixedData, 0, null))
+            && is_string($stringKey = Helper::Array()->Get($mixedData, 0, null))
             && $fiveCode->isVariableAllowed($stringKey, 'forget')
         ) {
             $fiveCode->variableForget($stringKey);

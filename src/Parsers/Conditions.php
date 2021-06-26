@@ -38,7 +38,7 @@ class Conditions extends ParsersAbstract {
     public static function if(FiveCode $fiveCode, array $arrayArguments = []) {
         // Run the first argument to get the conditional results ( true | false )
         $mixedResult = $fiveCode->instructions(
-            Helper::Arrays()::get($arrayArguments, 0, false)
+            Helper::Array()->Get($arrayArguments, 0, false)
         );
 
         if (
@@ -46,7 +46,7 @@ class Conditions extends ParsersAbstract {
             (
                 true === $mixedResult
                 && !is_null(
-                    $mixedTrueInstructionsOrInstruction = Helper::Arrays()::get(
+                    $mixedTrueInstructionsOrInstruction = Helper::Array()->Get(
                         $arrayArguments,
                         1,
                         null
@@ -58,7 +58,7 @@ class Conditions extends ParsersAbstract {
             || (
                 true !== $mixedResult
                 && !is_null(
-                    $mixedTrueInstructionsOrInstruction = Helper::Arrays()::get(
+                    $mixedTrueInstructionsOrInstruction = Helper::Array()->Get(
                         $arrayArguments,
                         2,
                         null
@@ -72,7 +72,7 @@ class Conditions extends ParsersAbstract {
         // if a fourth agument exists then execute as this is the always argument
         if (
             !is_null(
-                $mixedTrueInstructionsOrInstruction = Helper::Arrays()::get(
+                $mixedTrueInstructionsOrInstruction = Helper::Array()->Get(
                     $arrayArguments,
                     3,
                     null
@@ -97,7 +97,7 @@ class Conditions extends ParsersAbstract {
         foreach (
             (
                 !is_array($mixedStatementsOrStatement)
-                || Helper::Arrays()::isAssociative($mixedStatementsOrStatement)
+                || Helper::Array()->IsAssociative($mixedStatementsOrStatement)
                     ? [$mixedStatementsOrStatement]
                     : $mixedStatementsOrStatement
             )
@@ -128,7 +128,7 @@ class Conditions extends ParsersAbstract {
         foreach (
             (
                 !is_array($mixedStatementsOrStatement)
-                || Helper::Arrays()::isAssociative($mixedStatementsOrStatement)
+                || Helper::Array()->IsAssociative($mixedStatementsOrStatement)
                     ? [$mixedStatementsOrStatement]
                     : $mixedStatementsOrStatement
             )
@@ -183,7 +183,7 @@ class Conditions extends ParsersAbstract {
         }
 
         return $fiveCode->result(
-            Helper::Statements()::is($mixedLeft, $stringStatementType, $mixedRight)
+            Helper::Statement()->Is($mixedLeft, $stringStatementType, $mixedRight)
         );
     }
 

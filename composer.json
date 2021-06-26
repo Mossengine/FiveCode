@@ -28,7 +28,9 @@
     "php": ">=7.0",
     "ext-json": "*",
     "illuminate/support": "^5.2.32",
-    "mossengine/helper": "^1.0",
+    "mossengine/helper": "^2.0",
+    "mossengine/helpersarray": "^1.0",
+    "mossengine/helpersstatement": "^1.0",
     "ramsey/uuid": "^3.4.1"
   },
   "require-dev": {
