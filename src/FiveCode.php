@@ -2,7 +2,6 @@
 
 use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
 use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
-use Mossengine\FiveCode\Functions\Maths;
 use Mossengine\FiveCode\Parsers\Conditions;
 use Mossengine\FiveCode\Parsers\Executes;
 use Mossengine\FiveCode\Parsers\Iterators;
@@ -482,12 +481,7 @@ class FiveCode
             ->parsersAllowed(Helper::Array()->Get($arrayParameters, 'parsers.allowed', []))
 
             // Functions
-            ->functions(array_merge(
-                [
-                    'maths' => Maths::class
-                ],
-                Helper::Array()->Get($arrayParameters, 'functions.include', [])
-            ))
+            ->functions(Helper::Array()->Get($arrayParameters, 'functions.include', []))
             ->functionsAllowed(Helper::Array()->Get($arrayParameters, 'functions.allowed', []))
 
             // Variables
