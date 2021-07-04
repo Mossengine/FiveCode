@@ -2,7 +2,7 @@
 
 use Mossengine\FiveCode\Exceptions\ParserNotAllowedException;
 use Mossengine\FiveCode\Exceptions\ParserNotFoundException;
-use Mossengine\FiveCode\Parsers\Tests;
+use Mossengine\FiveCode\Parsers\Parsers;
 
 /**
  * Class ConstructionTest
@@ -317,7 +317,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         $fiveCode = new Mossengine\FiveCode\FiveCode;
 
         $fiveCode->parsers([
-            'tests' => Tests::class
+            'tests' => Parsers::class
         ]);
         $this->assertEquals(
             [
@@ -368,7 +368,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         $fiveCode = new Mossengine\FiveCode\FiveCode;
 
         $fiveCode->parsers([
-            'tests' => Tests::class
+            'tests' => Parsers::class
         ]);
         $fiveCode->parserForget('test1');
         $this->assertEquals(
@@ -403,7 +403,7 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
         $fiveCode = new Mossengine\FiveCode\FiveCode;
 
         $fiveCode->parsers([
-            'tests' => Tests::class
+            'tests' => Parsers::class
         ]);
         $fiveCode->parsersAllowed([
             'test1' => true,

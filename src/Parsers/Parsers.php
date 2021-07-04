@@ -3,10 +3,10 @@
 use Mossengine\FiveCode\FiveCode;
 
 /**
- * Class Tests
+ * Class Parsers
  * @package Mossengine\FiveCode\Parsers
  */
-class Tests extends ParsersAbstract {
+class Parsers extends ParsersAbstract {
 
     /**
      * @return array|string

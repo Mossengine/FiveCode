@@ -1,11 +1,11 @@
 <?php
 
-use Mossengine\FiveCode\Parsers\Tests;
+use Mossengine\FiveCode\Parsers\Parsers;
 
 /**
- * Class TestsTest
+ * Class ParsersTest
  */
-class TestsTest extends PHPUnit_Framework_TestCase
+class ParsersTest extends PHPUnit_Framework_TestCase
 {
 
     public function testCanTest1() {
@@ -14,7 +14,7 @@ class TestsTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make([
                 'parsers' => [
                     'include' => [
-                        'tests' => Tests::class
+                        'parsers' => Parsers::class
                     ]
                 ],
                 'debug' => true
@@ -32,7 +32,7 @@ class TestsTest extends PHPUnit_Framework_TestCase
             Mossengine\FiveCode\FiveCode::make([
                 'parsers' => [
                     'include' => [
-                        'tests' => Tests::class
+                        'parsers' => Parsers::class
                     ]
                 ]
             ])
