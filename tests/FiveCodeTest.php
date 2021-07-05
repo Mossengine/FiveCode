@@ -201,18 +201,79 @@ class FiveCodeTest extends PHPUnit_Framework_TestCase
             $fiveCode->functions()
         );
     }
-    public function testIfIsFunctionAllowed() {
+    public function testIfIsFunctionAllowedAsterisk() {
         $fiveCode = new Mossengine\FiveCode\FiveCode;
 
         $fiveCode->functionsAllowed([
-            'a' => true,
-            'b' => false
+            '*' => true,
+            'b' => false,
+            'c' => [
+                'd' => [
+                    'f' => false
+                ]
+            ],
+            'g' => [
+                'h' => false
+            ]
         ]);
         $this->assertTrue(
             $fiveCode->isFunctionAllowed('a')
         );
         $this->assertFalse(
             $fiveCode->isFunctionAllowed('b')
+        );
+        $this->assertTrue(
+            $fiveCode->isFunctionAllowed('c.d.e')
+        );
+        $this->assertFalse(
+            $fiveCode->isFunctionAllowed('c.d.f')
+        );
+        $this->assertFalse(
+            $fiveCode->isFunctionAllowed('g.h.i')
+        );
+        $this->assertFalse(
+            $fiveCode->isFunctionAllowed('g.h.i.j')
+        );
+        $this->assertFalse(
+            $fiveCode->isFunctionAllowed('g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z')
+        );
+    }
+    public function testIfIsFunctionAllowed() {
+        $fiveCode = new Mossengine\FiveCode\FiveCode;
+
+        $fiveCode->functionsAllowed([
+            'a' => true,
+            'b' => false,
+            'c' => [
+                'd' => [
+                    'e' => true,
+                    'f' => false
+                ]
+            ],
+            'g' => [
+                'h' => true
+            ]
+        ]);
+        $this->assertTrue(
+            $fiveCode->isFunctionAllowed('a')
+        );
+        $this->assertFalse(
+            $fiveCode->isFunctionAllowed('b')
+        );
+        $this->assertTrue(
+            $fiveCode->isFunctionAllowed('c.d.e')
+        );
+        $this->assertFalse(
+            $fiveCode->isFunctionAllowed('c.d.f')
+        );
+        $this->assertTrue(
+            $fiveCode->isFunctionAllowed('g.h.i')
+        );
+        $this->assertTrue(
+            $fiveCode->isFunctionAllowed('g.h.i.j')
+        );
+        $this->assertTrue(
+            $fiveCode->isFunctionAllowed('g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z')
         );
     }
 

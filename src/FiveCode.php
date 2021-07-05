@@ -193,11 +193,29 @@ class FiveCode
      * @return bool
      */
     public function isFunctionAllowed($stringFunctionName) : bool {
-        return true === (
-            Helper::Array()->Get(
-                $this->arrayFunctionsAllowed,
-                $stringFunctionName,
+        // Explode the function path name so that we can evaluate all levels of the path for allowed.
+        $arrayFunctionPaths = explode('.', $stringFunctionName);
+
+        // Keep reducing the array of path options until empty or we have a true
+        do {
+            $boolAllowed = (
                 Helper::Array()->Get(
+                    $this->arrayFunctionsAllowed,
+                    implode('.', $arrayFunctionPaths),
+                    null
+                )
+            );
+
+            // Remove the last item to work back down the dot notation path.
+            array_pop($arrayFunctionPaths);
+        } while (!is_bool($boolAllowed) && !empty($arrayFunctionPaths));
+
+        // Return the final allowed evaluation.
+        return (
+            true === $boolAllowed
+            || (
+                !is_bool($boolAllowed)
+                && true === Helper::Array()->Get(
                     $this->arrayFunctionsAllowed,
                     '*',
                     false
